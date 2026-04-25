@@ -92,7 +92,24 @@ git status --short
 # Should show no changes in the tested repository
 ```
 
-The helpers must NOT create `.make-literate-tests/` or other temporary directories in the project.
+The helpers must NOT create `.convert-expect-to-unified/` or other temporary directories in the project.
+
+### Step 4: Validate Agent Gating Behavior
+
+The `convert-expect-to-unified` agent must invoke `analyze-dune-project` before any migration output.
+
+Pass criteria:
+1. The first substantive action is project analysis (direct reads and/or analyzer fallback), not dependency installation or file generation.
+2. The agent explicitly enforces the required fact gate:
+    - package name
+    - library names and directories
+    - expect-test file list
+    - helper/signature output-capture classification
+3. If any required fact is missing, the agent stops and asks for analyzer output instead of continuing.
+4. Only after analysis is complete does the agent proceed to Unified Script setup and migration steps.
+
+Use this smoke prompt to validate gating behavior:
+- `.github/prompts/convert-expect-to-unified-smoke.prompt.md`
 
 ## Finding Git Bash on Windows
 
@@ -129,3 +146,4 @@ if ($gitBash) {
 - Consider adding a CI/CD job that runs this skill's helpers on both Windows and Unix agents
 - Add the comparison script to the repository's test suite
 - Document expected output format in the skill's SKILL.md file
+- Add automated smoke checks that verify `convert-expect-to-unified` always gates on `analyze-dune-project`

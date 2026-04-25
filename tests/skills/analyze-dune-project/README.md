@@ -2,6 +2,16 @@
 
 This document explains how to test the `analyze-dune-project` skill to ensure the PowerShell and shell helpers produce equivalent output across platforms.
 
+## Agent Integration
+
+The `convert-expect-to-unified` agent now depends on this skill as a mandatory first step.
+
+When testing the full migration workflow:
+
+1. Invoke the `convert-expect-to-unified` agent.
+2. Confirm it completes project analysis using `analyze-dune-project` before any migration output.
+3. Confirm on Unix/Linux that unified-script output comparisons use `test-compare-outputs.sh`.
+
 ## Quick Start
 
 1. **Prepare a test Dune project** (or use an existing one like `https://github.com/ocaml/ocaml-re.git`)
@@ -33,8 +43,10 @@ git checkout 22e5242444a9a6f63f90ace4eca99920f3ec7798
 ### Step 2: Run the PowerShell Helper
 
 ```powershell
-Set-Location "C:\path\to\test\ocaml-re"
-$skillPath = "Y:\source\dk-ai\skills\analyze-dune-project"
+# Set skillPath to the location of the skill on your machine
+$skillPath = "path\to\dk-ai\skills\analyze-dune-project"
+
+Set-Location "path\to\test\ocaml-re"
 $outFile = Join-Path $env:TEMP 'analysis-ps1.txt'
 
 powershell -ExecutionPolicy Bypass -File "$skillPath\analyze-project.ps1" -OutFile $outFile
@@ -43,15 +55,22 @@ Write-Host "PowerShell output: $outFile"
 
 ### Step 3: Run the Shell Helper
 
-The shell helper requires a POSIX shell. On Windows, Git Bash is available at:
+The shell helper requires a POSIX shell. On Windows, Git Bash is typically available at:
+
 - `C:\Program Files\Git\bin\bash.exe`
 - `C:\Program Files\Git\usr\bin\bash.exe`
 
 ```powershell
-$skillPath = "Y:\source\dk-ai\skills\analyze-dune-project"
+# Set skillPath to the location of the skill on your machine
+$skillPath = "path\to\dk-ai\skills\analyze-dune-project"
+$bashPath = "C:\Program Files\Git\bin\bash.exe"  # Adjust based on your Git installation
 $outFile = Join-Path $env:TEMP 'analysis-sh.txt'
 
-& 'C:\Program Files\Git\bin\bash.exe' -lc "cd /c/path/to/test/ocaml-re && `"$skillPath/analyze-project.sh`" `"$outFile`""
+# Convert Windows path to Git Bash path format (e.g., C:\path → /c/path)
+$skillPathBash = ($skillPath -replace '^([a-zA-Z]):', '/''$1') -replace '\\', '/'
+$outFileBash = ($outFile -replace '^([a-zA-Z]):', '/''$1') -replace '\\', '/'
+
+& $bashPath -lc "cd /path/to/test/ocaml-re && `"$skillPathBash/analyze-project.sh`" `"$outFileBash`""
 Write-Host "Shell output: $outFile"
 ```
 
@@ -60,24 +79,30 @@ Write-Host "Shell output: $outFile"
 Use the provided comparison helper script to validate section ordering, content, and handle newline differences.
 
 **On Windows:**
+
 ```powershell
-# Run the PowerShell test comparison script
-$testDir = "Y:\source\dk-ai\tests\skills\analyze-dune-project"
+# Set testDir to the location of the tests on your machine
+$testDir = "path\to\dk-ai\tests\skills\analyze-dune-project"
+$psOutput = Join-Path $env:TEMP 'analysis-ps1.txt'
+$shOutput = Join-Path $env:TEMP 'analysis-sh.txt'
+
 & "$testDir\test-compare-outputs.ps1" `
-    -PowerShellOutput "C:\Users\<user>\AppData\Local\Temp\analysis-ps1.txt" `
-    -ShellOutput "C:\Users\<user>\AppData\Local\Temp\analysis-sh.txt"
+    -PowerShellOutput $psOutput `
+    -ShellOutput $shOutput
 ```
 
 **On Unix/Linux:**
+
 ```bash
-# Run the shell test comparison script
-testDir="/path/to/dk-ai/tests/skills/analyze-dune-project"
+# Set testDir to the location of the tests on your machine
+testDir="path/to/dk-ai/tests/skills/analyze-dune-project"
 bash "$testDir/test-compare-outputs.sh" \
     "/tmp/analysis-ps1.txt" \
     "/tmp/analysis-sh.txt"
 ```
 
 The comparison script will:
+
 - Verify both files have the same number of sections
 - Confirm section headers are identical (after normalizing path separators)
 - Verify file content is identical (ignoring line-ending differences)
@@ -91,31 +116,39 @@ The comparison script will:
 
 ✅ **Content is identical** — File contents should match byte-for-byte, ignoring only line-ending differences (`LF` vs `CRLF`)
 
-✅ **No repo pollution** — Neither helper should create `.make-literate-tests` in the target repository or any other temporary files in the project
+✅ **No repo pollution** — Neither helper should create `.convert-expect-to-unified` in the target repository or any other temporary files in the project
 
 ## Troubleshooting
 
 ### Git Bash Not Found on Windows
+
 Run the helper script to find Git Bash:
+
 ```powershell
 $candidates = @('C:\Program Files\Git\bin\sh.exe','C:\Program Files\Git\usr\bin\sh.exe','C:\Program Files\Git\bin\bash.exe')
 $candidates | Where-Object { Test-Path $_ }
 ```
 
 ### Newline Mismatch Warnings
+
 The comparison script handles `LF`/`CRLF` differences automatically. If newlines are flagged as a problem, see [CROSS_PLATFORM_NOTES.md](./CROSS_PLATFORM_NOTES.md).
 
 ### Section Headers Don't Match
+
 This usually indicates a path normalization issue. Verify:
+
 1. Paths use forward slashes (`/`) not backslashes (`\`)
 2. Paths omit leading `.\` prefix
 3. Both outputs sort files the same way (use `LC_ALL=C sort` semantics)
 
 ## Reference
 
+All paths below are relative to the dk-ai repository root:
+
 - **PowerShell helper:** `skills/analyze-dune-project/analyze-project.ps1`
 - **Shell helper:** `skills/analyze-dune-project/analyze-project.sh`
 - **Skill documentation:** `skills/analyze-dune-project/SKILL.md`
+- **Agent:** `agents/convert-expect-to-unified.agent.md`
 - **Comparison helpers:**
   - Windows: `tests/skills/analyze-dune-project/test-compare-outputs.ps1`
   - Unix/Linux: `tests/skills/analyze-dune-project/test-compare-outputs.sh`
