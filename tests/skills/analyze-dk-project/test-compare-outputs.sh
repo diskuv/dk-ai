@@ -55,6 +55,28 @@ check_required_sections() {
     return $all_found
 }
 
+check_dk_project_classification() {
+    # $1 = file path
+    file=$1
+    ok=0
+
+    if ! grep -Eq '^IsDkProject: (true|false)$' "$file" 2>/dev/null; then
+        printf "${RED}❌ Missing dk project classification${NC}\n"
+        ok=1
+    else
+        printf "${GREEN}✓ Found dk project classification${NC}\n"
+    fi
+
+    if ! grep -Eq '^RootDkU: (dk\.u|\(not found\))$' "$file" 2>/dev/null; then
+        printf "${RED}❌ Missing root dk.u marker result${NC}\n"
+        ok=1
+    else
+        printf "${GREEN}✓ Found root dk.u marker result${NC}\n"
+    fi
+
+    return $ok
+}
+
 extract_modules() {
     # $1 = file path
     grep "^Module:" "$1" 2>/dev/null | sed 's/^Module: //' | sort -u || true
@@ -81,10 +103,12 @@ printf "${CYAN}=== Analyzing dk-project Skill Output ===${NC}\n"
 printf "\n${CYAN}1. Checking PowerShell output...${NC}\n"
 ps_check=0
 check_required_sections "$ps_output" "PowerShell" || ps_check=$?
+check_dk_project_classification "$ps_output" || ps_check=1
 
 printf "\n${CYAN}2. Checking Shell output...${NC}\n"
 sh_check=0
 check_required_sections "$sh_output" "Shell" || sh_check=$?
+check_dk_project_classification "$sh_output" || sh_check=1
 
 printf "\n${CYAN}3. Comparing files...${NC}\n"
 compare_files "$ps_output" "$sh_output" "Output" || true

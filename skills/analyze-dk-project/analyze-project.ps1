@@ -96,8 +96,23 @@ function Get-ModuleProseContextFromRunFiles {
 $absOut = $outFilePath
 $valuesSamplerCommand = Get-ValuesSamplerCommand
 
-# 1. Scan etc/dk/i for dependencies
-Write-Utf8 -Path $absOut -Lines @("=== DEPENDENCIES (from etc/dk/i) ===")
+# 1. Detect whether this is a dk project via root dk.u
+Write-Utf8 -Path $absOut -Lines @("=== DK PROJECT DETECTION ===")
+if (Test-Path -Path "dk.u" -PathType Leaf) {
+    Write-Utf8 -Path $absOut -Lines @(
+        "IsDkProject: true",
+        "RootDkU: dk.u"
+    )
+}
+else {
+    Write-Utf8 -Path $absOut -Lines @(
+        "IsDkProject: false",
+        "RootDkU: (not found)"
+    )
+}
+
+# 2. Scan etc/dk/i for dependencies
+Write-Utf8 -Path $absOut -Lines @("", "=== DEPENDENCIES (from etc/dk/i) ===")
 if (Test-Path -Path "etc/dk/i" -PathType Container) {
     Get-ChildItem -Path "etc/dk/i" -Recurse |
         Sort-Object { Get-RepoRelativePath $_.FullName } |
@@ -110,7 +125,7 @@ else {
     Write-Utf8 -Path $absOut -Lines @("(etc/dk/i directory not found)")
 }
 
-# 2. Find and scan all dist-*.u/run.u files
+# 3. Find and scan all dist-*.u/run.u files
 Write-Utf8 -Path $absOut -Lines @("", "=== DIST-*.U/RUN.U FILES ===")
 $distRunFiles = Get-ChildItem -Path . -Recurse -Filter "run.u" |
     Where-Object { $_.Directory.Name -match "^dist-.+\.u$" } |
@@ -127,7 +142,7 @@ else {
     Write-Utf8 -Path $absOut -Lines @("(no dist-*.u/run.u files found)")
 }
 
-# 3. Find and scan all etc/dk/v/*.values.{jsonc,lua} files
+# 4. Find and scan all etc/dk/v/*.values.{jsonc,lua} files
 # Extract filenames from JSON outputs (sample up to 100)
 Write-Utf8 -Path $absOut -Lines @("", "=== VALUES FILES (etc/dk/v/*.values.*) ===")
 if (Test-Path -Path "etc/dk/v" -PathType Container) {
@@ -184,7 +199,7 @@ else {
     Write-Utf8 -Path $absOut -Lines @("(etc/dk/v directory not found)")
 }
 
-# 4. Extract and summarize MODULE@VERSION references from run.u files
+# 5. Extract and summarize MODULE@VERSION references from run.u files
 Write-Utf8 -Path $absOut -Lines @("", "=== MODULE@VERSION EXTRACTION SUMMARY ===")
 $modulesSlots = @{}
 $moduleCommands = @{}

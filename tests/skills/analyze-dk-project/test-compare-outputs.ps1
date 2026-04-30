@@ -37,6 +37,7 @@ function Test-RequiredSections {
 
     $content = Get-Content -Path $File -Encoding UTF8 -Raw
     $requiredSections = @(
+        '=== DK PROJECT DETECTION ===',
         '=== DEPENDENCIES \(from etc/dk/i\) ===',
         '=== DIST-\*\.U/RUN\.U FILES ===',
         '=== VALUES FILES \(etc/dk/v/\*\.values\.\*\) ===',
@@ -57,6 +58,30 @@ function Test-RequiredSections {
     return $allFound
 }
 
+function Test-DkProjectClassification {
+    param([string]$File)
+
+    $content = Get-Content -Path $File -Encoding UTF8 -Raw
+    $hasClassification = $content -match 'IsDkProject:\s+(true|false)'
+    $hasRootMarker = $content -match 'RootDkU:\s+(dk\.u|\(not found\))'
+
+    if ($hasClassification) {
+        Write-Host 'Found dk project classification' -ForegroundColor Green
+    }
+    else {
+        Write-Host 'Missing dk project classification' -ForegroundColor Red
+    }
+
+    if ($hasRootMarker) {
+        Write-Host 'Found root dk.u marker result' -ForegroundColor Green
+    }
+    else {
+        Write-Host 'Missing root dk.u marker result' -ForegroundColor Red
+    }
+
+    return ($hasClassification -and $hasRootMarker)
+}
+
 function Get-ExtractedModules {
     param([string]$File)
 
@@ -74,9 +99,11 @@ Write-Host '=== Analyzing dk-project Skill Output ===' -ForegroundColor Cyan
 
 Write-Host "`n1. Checking PowerShell output..." -ForegroundColor Cyan
 $psOk = Test-RequiredSections -File $PowerShellOutput
+[void](Test-DkProjectClassification -File $PowerShellOutput)
 
 Write-Host "`n2. Checking Shell output..." -ForegroundColor Cyan
 $shOk = Test-RequiredSections -File $ShellOutput
+[void](Test-DkProjectClassification -File $ShellOutput)
 
 Write-Host "`n3. Comparing files..." -ForegroundColor Cyan
 [void](Compare-Files -File1 $PowerShellOutput -File2 $ShellOutput -Label 'Output')
@@ -100,7 +127,9 @@ else {
 }
 
 Write-Host "`n=== Summary ===" -ForegroundColor Cyan
-$allPass = $psOk -and $shOk
+$allPass = $psOk -and $shOk -and
+    (Test-DkProjectClassification -File $PowerShellOutput) -and
+    (Test-DkProjectClassification -File $ShellOutput)
 if ($allPass) {
     Write-Host 'All checks passed' -ForegroundColor Green
     exit 0

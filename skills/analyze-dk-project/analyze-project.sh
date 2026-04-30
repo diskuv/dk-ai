@@ -51,15 +51,25 @@ sampler_info=$(resolve_values_sampler || true)
 sampler_command=$(printf '%s' "$sampler_info" | sed -n '1p')
 sampler_script=$(printf '%s' "$sampler_info" | sed -n '2p')
 
-# 1. Scan etc/dk/i for dependencies
-printf '=== DEPENDENCIES (from etc/dk/i) ===\n' >> "$out_file"
+# 1. Detect whether this is a dk project via root dk.u
+printf '=== DK PROJECT DETECTION ===\n' >> "$out_file"
+if [ -f "dk.u" ]; then
+    printf 'IsDkProject: true\n' >> "$out_file"
+    printf 'RootDkU: dk.u\n' >> "$out_file"
+else
+    printf 'IsDkProject: false\n' >> "$out_file"
+    printf 'RootDkU: (not found)\n' >> "$out_file"
+fi
+
+# 2. Scan etc/dk/i for dependencies
+append_section "DEPENDENCIES (from etc/dk/i)"
 if [ -d "etc/dk/i" ]; then
     find "etc/dk/i" -type f -o -type d | LC_ALL=C sort | sed 's|^\./||' >> "$out_file"
 else
     printf '(etc/dk/i directory not found)\n' >> "$out_file"
 fi
 
-# 2. Find and scan all dist-*.u/run.u files
+# 3. Find and scan all dist-*.u/run.u files
 append_section "DIST-*.U/RUN.U FILES"
 find . -type f -name "run.u" -path "*/dist-*.u/run.u" | LC_ALL=C sort > "$temp_dir/dist-run-files.txt"
 if [ -s "$temp_dir/dist-run-files.txt" ]; then
@@ -71,7 +81,7 @@ else
     printf '(no dist-*.u/run.u files found)\n' >> "$out_file"
 fi
 
-# 3. Find and scan all etc/dk/v/*.values.{jsonc,lua} files
+# 4. Find and scan all etc/dk/v/*.values.{jsonc,lua} files
 # Extract filenames from JSON outputs (sample up to 100)
 append_section "VALUES FILES (etc/dk/v/*.values.*)"
 if [ -d "etc/dk/v" ]; then
@@ -109,7 +119,7 @@ else
     printf '(etc/dk/v directory not found)\n' >> "$out_file"
 fi
 
-# 4. Extract and summarize MODULE@VERSION references from run.u files
+# 5. Extract and summarize MODULE@VERSION references from run.u files
 append_section "MODULE@VERSION EXTRACTION SUMMARY"
 
 # Create a combined file of all run.u content for analysis

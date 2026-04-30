@@ -1,10 +1,14 @@
 # Testing the analyze-dk-project Skill
 
-This document explains how to test the `analyze-dk-project` skill to ensure the PowerShell and shell helpers produce equivalent output across platforms.
+This document explains how to test the `analyze-dk-project` skill to ensure the
+PowerShell and shell helpers produce equivalent output across platforms.
 
 ## Overview
 
-The `analyze-dk-project` skill analyzes dk projects to identify:
+The `analyze-dk-project` skill first determines whether a repository is a dk
+project by checking for `dk.u` in the repository root. If the repository is a
+dk project, it then identifies:
+- Root `dk.u` classification
 - Dependencies from `etc/dk/i` import directory
 - Modules referenced in `dist-*.u/run.u` unified scripts
 - Value shell commands (get-object, post-object, enter-object, install-object, get-asset, get-bundle)
@@ -64,10 +68,11 @@ sh "$skillPath/analyze-project.sh" "$outFile"
 
 Both outputs should contain:
 
-1. **Dependencies section** with files from `etc/dk/i`
-2. **DIST-*.U/RUN.U FILES section** listing all unified scripts
-3. **VALUES FILES section** with `*.values.{jsonc,lua}` files
-4. **MODULE@VERSION EXTRACTION SUMMARY** identifying modules and commands used
+1. **DK PROJECT DETECTION section** identifying whether root `dk.u` exists
+2. **Dependencies section** with files from `etc/dk/i`
+3. **DIST-*.U/RUN.U FILES section** listing all unified scripts
+4. **VALUES FILES section** with `*.values.{jsonc,lua}` files
+5. **MODULE@VERSION EXTRACTION SUMMARY** identifying modules and commands used
 
 #### Compare with the test comparison script (Unix)
 
@@ -86,6 +91,8 @@ bash test-compare-outputs.sh /c/temp/analysis-ps1.txt /c/temp/analysis-sh.txt
 The skill should identify patterns like:
 
 ```
+- IsDkProject: true
+- RootDkU: dk.u
 - get-object CommonsBase_Std@2.5.x -s Release.Windows_x86_64
 - post-object SomeModule@1.0.0 -f output.json -- param=value
 - enter-object DebugModule@1.0.0 -s Release.Agnostic
@@ -112,15 +119,16 @@ If a section is empty (e.g., no `dist-*.u` folders found), the script will note 
 
 When the `analyze-dk-project` skill is used by agents:
 
-1. The agent calls the skill to analyze the project
-2. The agent receives structured module, dependency, and slot information
-3. The agent uses this information to plan subsequent operations
+1. The agent calls the skill to classify the repository by root `dk.u`
+2. The agent receives structured dk-project, module, dependency, and slot information
+3. The agent uses this information to filter repositories and plan subsequent operations
 4. The agent verifies that all critical information was extracted before proceeding
 
 ## Test Coverage
 
 The skill testing should verify:
 
+- [ ] Root `dk.u` classification is reported
 - [ ] Dependency inventory from `etc/dk/i` is complete
 - [ ] All `dist-*.u/run.u` files are discovered
 - [ ] All `*.values.{jsonc,lua}` files are found
