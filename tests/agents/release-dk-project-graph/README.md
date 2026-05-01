@@ -55,8 +55,11 @@ Confirm that the agent:
 1. checks `gh --version` before promising workflow visibility through GitHub CLI
 2. stops and gives installation guidance if `gh` is unavailable
 3. uses `gh` commands to identify the relevant workflow run after each push
-4. either shows workflow logs while the run is active or gives the workflow URL
+4. matches that workflow run to the pushed release tag rather than to `main`
+5. either shows workflow logs while the run is active or gives the workflow URL
    when live log display is not possible
+6. waits for the matched workflow run to finish before releasing the next
+   repository
 
 ### Step 4: Dependency and version derivation checks
 
@@ -79,7 +82,9 @@ Confirm that the agent still:
 2. asks before creating each empty release commit and tag
 3. pauses for CI confirmation after making workflow logs or the workflow link
    visible to the user
-4. explains how to resume with `start_package` after an abort
+4. does not release the next repository until the current repository's workflow
+   run has finished
+5. explains how to resume with `start_package` after an abort
 
 ## Expected Patterns
 
@@ -94,8 +99,11 @@ The agent should show evidence of:
   as a dk project
 - dependency discovery from root `dk.u` `%% import` commands
 - an explicit `analyze-dk-project` gate before release actions
-- a `gh`-based workflow discovery step after each push
+- a `gh`-based workflow discovery step after each push that matches the run to
+  the pushed release tag
 - either visible `gh` log output or a workflow URL retrieved through `gh`
+- a wait for the matched workflow run to finish before the next repository is
+  released
 - dependency-derived order, usually described as a graph or topological sort
 - per-repo version-prefix derivation from `etc/dk/d/*.json`
 - release tags shaped like `<major>.<minor>.<timestamp>`
@@ -129,6 +137,18 @@ workflow-observability path is incomplete.
 If the agent neither shows logs with `gh` nor gives the workflow URL obtained
 through `gh`, the user cannot observe the running release workflow.
 
+### Agent matches the workflow run to main instead of the tag
+
+If the agent looks up the workflow run by `main` after pushing a release tag, it
+may attach the wrong run or fail to find the release run at all. The workflow
+lookup must be keyed to the pushed `<tag>`.
+
+### Agent releases the next repository before CI finishes
+
+If the agent starts the next repository while the current repository's workflow
+run is still active, the CI gate failed. The agent must wait for the current run
+to finish before asking to continue.
+
 ### Agent uses loose dk-project heuristics
 
 If the agent treats a repository as a dk project because it contains `etc/dk`,
@@ -150,6 +170,8 @@ on top of it for cross-repo rerelease work.
 - [ ] `gh` preflight
 - [ ] `gh` install guidance when unavailable
 - [ ] Live workflow logs or workflow-link fallback via `gh`
+- [ ] Workflow run matched to pushed release tag
+- [ ] Wait for workflow completion before next repository
 - [ ] Dependency-derived rerelease order
 - [ ] Per-repo `major.minor` derivation from `etc/dk/d/*.json`
 - [ ] Dirty-tree protection

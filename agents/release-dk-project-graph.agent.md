@@ -181,11 +181,13 @@ For each repository in order:
 4. Create the tag.
 5. Push `main` to the selected remote's `main` branch.
 6. Push the tag to the selected remote.
-7. Use `gh` to discover the workflow run triggered by the push. Prefer explicit
-   CLI-driven discovery such as:
+7. Use `gh` to discover the workflow run triggered by the pushed release tag, not
+   by `main`. Match the run to the just-created `<tag>` explicitly, for example by
+   selecting the run whose `headBranch` equals `<tag>` or whose display title
+   references `Release <tag>`. Prefer explicit CLI-driven discovery such as:
 
    ```text
-   gh run list --repo <owner>/<repo> --limit 10
+   gh run list --repo <owner>/<repo> --limit 10 --json databaseId,event,headBranch,displayTitle,createdAt
    ```
 
    and then inspect the chosen run with:
@@ -194,7 +196,7 @@ For each repository in order:
    gh run view <run-id> --repo <owner>/<repo>
    ```
 
-8. While the run is active, show the user the workflow logs with `gh` when
+8. While the matched run is active, show the user the workflow logs with `gh` when
    possible. Prefer commands such as:
 
    ```text
@@ -217,8 +219,14 @@ For each repository in order:
    Surface the workflow URL explicitly so the user can open it in the browser.
 10. Pause only after the user can observe the workflow either through displayed
     logs or the provided workflow link.
-11. If the user declines to continue, abort and tell them which `start_package`
-    value to use for retry.
+11. Do not begin the next repository until the current repository's matched
+    workflow run has finished. Wait for a terminal conclusion for the current
+    repository before asking whether to continue.
+12. If the matched workflow run fails, is cancelled, or cannot be found
+    unambiguously, stop and tell the user which `start_package` value to use for
+    retry.
+13. If the user declines to continue after the current workflow has finished,
+    abort and tell them which `start_package` value to use for retry.
 
 Use non-interactive git commands. Do not use destructive resets or silent
 fallbacks.
