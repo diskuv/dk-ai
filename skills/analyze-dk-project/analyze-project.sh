@@ -61,12 +61,15 @@ else
     printf 'RootDkU: (not found)\n' >> "$out_file"
 fi
 
-# 2. Scan etc/dk/i for dependencies
-append_section "DEPENDENCIES (from etc/dk/i)"
-if [ -d "etc/dk/i" ]; then
-    find "etc/dk/i" -type f -o -type d | LC_ALL=C sort | sed 's|^\./||' >> "$out_file"
+# 2. Read dependency imports from root dk.u
+append_section "DEPENDENCIES (from root dk.u %% import)"
+if [ -f "dk.u" ]; then
+    grep -E '^[[:space:]]*%%[[:space:]]+import([[:space:]]|$)' "dk.u" | sed 's/^[[:space:]]*//' >> "$out_file" || true
+    if ! grep -Eq '^[[:space:]]*%%[[:space:]]+import([[:space:]]|$)' "dk.u"; then
+        printf '(no %% import commands found in dk.u)\n' >> "$out_file"
+    fi
 else
-    printf '(etc/dk/i directory not found)\n' >> "$out_file"
+    printf '(dk.u file not found)\n' >> "$out_file"
 fi
 
 # 3. Find and scan all dist-*.u/run.u files

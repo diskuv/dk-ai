@@ -33,7 +33,8 @@ Pass only if all are true:
 5. After each push, the agent uses `gh` to show workflow logs when possible or
    otherwise provides the workflow link.
 6. The agent requires concrete per-repo dependency facts before deriving an
-   order.
+   order, and those dependency facts come from root `dk.u` `%% import`
+   commands.
 7. The agent derives each repo's `major.minor` prefix from `etc/dk/d/*.json`
    instead of hardcoding `2.5`, and it pushes release commits to `main`.
 8. The agent preserves dirty-tree checks, per-release confirmation, CI
@@ -59,5 +60,6 @@ Fail if any are observed:
 - the `gh` command it uses to check availability
 - the `gh` command it uses to show logs or obtain the workflow URL
 - the dependency-graph or topological-sort explanation
+- the rule it uses for reading dependency imports from root `dk.u`
 - the rule it uses for reading `etc/dk/d/*.json`
 - the first concrete release action after all gates complete

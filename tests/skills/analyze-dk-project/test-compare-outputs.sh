@@ -24,7 +24,7 @@ check_required_sections() {
     
     printf "${CYAN}Checking %s output...${NC}\n" "$label"
     
-    if ! grep -q "=== DEPENDENCIES (from etc/dk/i) ===" "$file" 2>/dev/null; then
+    if ! grep -q "=== DEPENDENCIES (from dk.u %% imports) ===" "$file" 2>/dev/null; then
         printf "${RED}❌ Missing section: DEPENDENCIES${NC}\n"
         all_found=1
     else

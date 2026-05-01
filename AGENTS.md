@@ -283,7 +283,7 @@ Example:
 ## Created: April 2026
 
 Identifies:
-- Dependencies from etc/dk/i
+- Dependencies from root dk.u %% import commands
 - Modules in dist-*.u folders
 - Module slots from run.u scripts
 - Descriptions from *.values.{jsonc,lua}
@@ -325,10 +325,10 @@ Before committing a new skill or agent:
 - **Analysis**: Chapter structure, cross-references
 - **Patterns**: SKILL.md with fallback script pattern
 
-### analyze-dk-project (New)
+### analyze-dk-project
 
 - **Purpose**: Analyze dk package projects
-- **Dependencies**: From `etc/dk/i` import directory
+- **Dependencies**: From root `dk.u` `%% import` commands
 - **Modules**: From `dist-*.u/run.u` unified scripts
 - **Commands**: All value shell command types
 - **Descriptions**: From prose or `*.values.{jsonc,lua}`
@@ -340,6 +340,7 @@ Before committing a new skill or agent:
 
 **Q: When should I create a skill vs. having the agent do it directly?**
 A: Create a skill when the functionality:
+
 - Is reusable by multiple agents
 - Can be tested independently
 - Benefits from cross-platform implementations
@@ -347,6 +348,7 @@ A: Create a skill when the functionality:
 
 **Q: What if my analysis needs to call external tools?**
 A: Use helper scripts that:
+
 - Run from the project root
 - Output to temp directories
 - Handle missing tools gracefully

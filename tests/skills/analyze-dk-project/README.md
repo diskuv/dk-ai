@@ -8,8 +8,9 @@ PowerShell and shell helpers produce equivalent output across platforms.
 The `analyze-dk-project` skill first determines whether a repository is a dk
 project by checking for `dk.u` in the repository root. If the repository is a
 dk project, it then identifies:
+
 - Root `dk.u` classification
-- Dependencies from `etc/dk/i` import directory
+- Dependencies from root `dk.u` `%% import` commands
 - Modules referenced in `dist-*.u/run.u` unified scripts
 - Value shell commands (get-object, post-object, enter-object, install-object, get-asset, get-bundle)
 - Slot information for each module
@@ -69,7 +70,7 @@ sh "$skillPath/analyze-project.sh" "$outFile"
 Both outputs should contain:
 
 1. **DK PROJECT DETECTION section** identifying whether root `dk.u` exists
-2. **Dependencies section** with files from `etc/dk/i`
+2. **Dependencies section** with `%% import` commands from root `dk.u`
 3. **DIST-*.U/RUN.U FILES section** listing all unified scripts
 4. **VALUES FILES section** with `*.values.{jsonc,lua}` files
 5. **MODULE@VERSION EXTRACTION SUMMARY** identifying modules and commands used
@@ -129,7 +130,7 @@ When the `analyze-dk-project` skill is used by agents:
 The skill testing should verify:
 
 - [ ] Root `dk.u` classification is reported
-- [ ] Dependency inventory from `etc/dk/i` is complete
+- [ ] Dependency inventory from root `dk.u` `%% import` commands is complete
 - [ ] All `dist-*.u/run.u` files are discovered
 - [ ] All `*.values.{jsonc,lua}` files are found
 - [ ] Module names are correctly extracted from commands

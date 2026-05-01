@@ -65,7 +65,7 @@ Confirm that the agent:
 1. enumerates/fetches the owner's repositories from GitHub
 2. invokes or explicitly depends on `analyze-dk-project` for each fetched repo
 3. keeps only repositories the skill classifies as dk projects via root `dk.u`
-4. builds a dependency graph from analyzed package data
+4. builds a dependency graph from root `dk.u` `%% import` commands in the analyzed dk projects
 5. topologically sorts the repos instead of replaying a baked-in list
 6. reads `etc/dk/d/*.json` and derives the largest `major.minor` version per
    repo
@@ -92,6 +92,7 @@ The agent should show evidence of:
 - a temporary clone/fetch workflow for the selected owner's repositories
 - a skill-driven root `dk.u` classification step before a repository is treated
   as a dk project
+- dependency discovery from root `dk.u` `%% import` commands
 - an explicit `analyze-dk-project` gate before release actions
 - a `gh`-based workflow discovery step after each push
 - either visible `gh` log output or a workflow URL retrieved through `gh`

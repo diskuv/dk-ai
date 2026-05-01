@@ -111,18 +111,22 @@ else {
     )
 }
 
-# 2. Scan etc/dk/i for dependencies
-Write-Utf8 -Path $absOut -Lines @("", "=== DEPENDENCIES (from etc/dk/i) ===")
-if (Test-Path -Path "etc/dk/i" -PathType Container) {
-    Get-ChildItem -Path "etc/dk/i" -Recurse |
-        Sort-Object { Get-RepoRelativePath $_.FullName } |
-        ForEach-Object {
-        $rel = Get-RepoRelativePath $_.FullName
-        Write-Utf8 -Path $absOut -Lines @($rel)
+# 2. Read dependency imports from root dk.u
+Write-Utf8 -Path $absOut -Lines @("", "=== DEPENDENCIES (from root dk.u %% import) ===")
+if (Test-Path -Path "dk.u" -PathType Leaf) {
+    $imports = Get-Content -Path "dk.u" -Encoding UTF8 |
+        Where-Object { $_ -match '^\s*%%\s+import(?:\s|$)' } |
+        ForEach-Object { $_.Trim() }
+
+    if ($imports) {
+        Write-Utf8 -Path $absOut -Lines $imports
+    }
+    else {
+        Write-Utf8 -Path $absOut -Lines @("(no %% import commands found in dk.u)")
     }
 }
 else {
-    Write-Utf8 -Path $absOut -Lines @("(etc/dk/i directory not found)")
+    Write-Utf8 -Path $absOut -Lines @("(dk.u file not found)")
 }
 
 # 3. Find and scan all dist-*.u/run.u files

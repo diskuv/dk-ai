@@ -43,7 +43,7 @@ Required facts before continuing:
 - a local clone or fetched worktree for each candidate dk repository
 - a skill-verified dk-project classification for each fetched repository based on
   root `dk.u`
-- per-repository dependency inventory from `etc/dk/i`
+- per-repository dependency inventory from root `dk.u` `%% import` commands
 - a normalized package identity for each repository
 - a dependency graph that can be topologically sorted after filtering to repos
   owned by the requested GitHub owner
@@ -125,7 +125,7 @@ For each retained repository:
 
 1. Use the `analyze-dk-project` result as the repository's dk-project
    classification source of truth.
-2. Capture dependencies from `etc/dk/i`.
+2. Capture dependencies from root `dk.u` `%% import` commands.
 3. Determine the repository's package identity, using normalized repository and
    dependency names to reconcile underscore/hyphen spelling differences.
 4. Read `etc/dk/d/*.json` directly and extract from each the toplevel `id` field.
@@ -140,7 +140,7 @@ Hard rule:
 ### Step 5: Build the rerelease order
 
 Construct a dependency graph where repository A depends on repository B when A's
-`etc/dk/i` imports packages produced by B.
+root `dk.u` `%% import` commands reference packages produced by B.
 
 Then:
 
@@ -229,7 +229,7 @@ After the final repository is released, remind the user to:
 
 1. import the packages locally using the GitHub job summary instructions
 2. run `./maintenance/test-cram.sh` where applicable
-3. commit and push any resulting `etc/dk/i` updates
+3. commit and push any resulting dependency-manifest updates
 
 ## Constraints
 
