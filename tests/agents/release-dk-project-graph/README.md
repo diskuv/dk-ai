@@ -80,11 +80,13 @@ Confirm that the agent still:
 
 1. checks for dirty/untracked files before release commits
 2. asks before creating each empty release commit and tag
-3. pauses for CI confirmation after making workflow logs or the workflow link
+3. uses the exact single-line release commit message `Release <tag>` with no
+   `Co-authored-by:` trailer or other footer
+4. pauses for CI confirmation after making workflow logs or the workflow link
    visible to the user
-4. does not release the next repository until the current repository's workflow
+5. does not release the next repository until the current repository's workflow
    run has finished
-5. explains how to resume with `start_package` after an abort
+6. explains how to resume with `start_package` after an abort
 
 ## Expected Patterns
 
@@ -107,6 +109,7 @@ The agent should show evidence of:
 - dependency-derived order, usually described as a graph or topological sort
 - per-repo version-prefix derivation from `etc/dk/d/*.json`
 - release tags shaped like `<major>.<minor>.<timestamp>`
+- release commits whose message is exactly `Release <tag>` with no trailer
 - release commits pushed to `main` rather than to a derived `V<major>_<minor>` branch
 
 ## Troubleshooting
@@ -149,6 +152,11 @@ If the agent starts the next repository while the current repository's workflow
 run is still active, the CI gate failed. The agent must wait for the current run
 to finish before asking to continue.
 
+### Agent adds a Co-authored-by trailer to the release commit
+
+If the agent appends `Co-authored-by:` or any other footer to the release commit
+message, it did not follow the required exact `Release <tag>` commit format.
+
 ### Agent uses loose dk-project heuristics
 
 If the agent treats a repository as a dk project because it contains `etc/dk`,
@@ -172,6 +180,7 @@ on top of it for cross-repo rerelease work.
 - [ ] Live workflow logs or workflow-link fallback via `gh`
 - [ ] Workflow run matched to pushed release tag
 - [ ] Wait for workflow completion before next repository
+- [ ] Exact `Release <tag>` commit message with no trailer
 - [ ] Dependency-derived rerelease order
 - [ ] Per-repo `major.minor` derivation from `etc/dk/d/*.json`
 - [ ] Dirty-tree protection

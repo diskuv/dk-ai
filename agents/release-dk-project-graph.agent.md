@@ -178,6 +178,9 @@ For each repository in order:
    Release <tag>
    ```
 
+   Use that exact single-line commit message. Do not append a
+   `Co-authored-by:` trailer or any other extra commit-message footer.
+
 4. Create the tag.
 5. Push `main` to the selected remote's `main` branch.
 6. Push the tag to the selected remote.

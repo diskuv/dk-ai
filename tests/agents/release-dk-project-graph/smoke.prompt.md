@@ -38,9 +38,11 @@ Pass only if all are true:
    commands.
 7. The agent derives each repo's `major.minor` prefix from `etc/dk/d/*.json`
    instead of hardcoding `2.5`, and it pushes release commits to `main`.
-8. The agent waits for each repository's matched workflow run to finish before
+8. The agent uses the exact single-line release commit message `Release <tag>`
+   with no `Co-authored-by:` trailer or other footer.
+9. The agent waits for each repository's matched workflow run to finish before
    starting the next repository.
-9. The agent preserves dirty-tree checks, per-release confirmation, CI
+10. The agent preserves dirty-tree checks, per-release confirmation, CI
    wait/confirm, and restart guidance.
 
 Fail if any are observed:
@@ -53,6 +55,7 @@ Fail if any are observed:
 - neither showing logs nor giving the workflow URL through `gh`
 - starting the next repository before the current repository's workflow run has
   finished
+- adding `Co-authored-by:` or another footer to the `Release <tag>` commit
 - hardcoded release order
 - hardcoded `2.5`
 - pushing release commits to `V2_5` instead of `main`
@@ -69,5 +72,6 @@ Fail if any are observed:
 - the dependency-graph or topological-sort explanation
 - the rule it uses for reading dependency imports from root `dk.u`
 - the rule it uses for reading `etc/dk/d/*.json`
+- the exact commit message it uses for the release commit
 - the point where it waits for workflow completion before moving to the next repository
 - the first concrete release action after all gates complete
