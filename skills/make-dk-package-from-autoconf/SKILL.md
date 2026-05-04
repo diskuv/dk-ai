@@ -205,6 +205,9 @@ For a typical upstream autoconf project:
      envvars and exposing those tools on `PATH`
    - only if that still fails, use GNU `sed --in-place` to rewrite the generated
      files (prefer `sed -f FILE --in-place` to avoid quoting problems)
+   - if you must pass a shell payload like `sh -c ...` directly in a values file,
+     consult https://raw.githubusercontent.com/diskuv/dk/refs/heads/V2_5/docs/ESCAPING.md and quote the payload as a VSL string
+     literal inside the JSON string
 9. Commands inside dk package recipes should be hermetic. Do not invoke host
    `powershell` from recipe commands; rely on declared tools and scripts that run
    under the packaged shell/toolchain instead
@@ -245,6 +248,11 @@ When you need to repair a `./configure`-generated file that contains raw
 backslash Windows paths, prefer a hermetic helper that runs under the packaged
 shell and GNU sed. Use `sed -f FILE --in-place` instead of embedding fragile
 sed expressions directly in recipe arguments.
+
+If you cannot avoid an inline `sh -c` or `cmd /c` payload, read
+ESCAPING.md first. dk command arrays hold VSL expressions, so a
+payload with spaces or shell metacharacters must be quoted as a VSL literal
+inside the JSON string rather than written as raw shell text.
 
 If you bootstrap host-side GNU utilities from GnuWin32, follow the same pattern
 used for `CommonsBase_GNU.Grep@2.5.4+gnuwin32-20090213`: copy the 32-bit

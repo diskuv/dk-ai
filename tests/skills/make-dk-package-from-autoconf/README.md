@@ -106,6 +106,7 @@ The skill guidance itself should clearly state:
 - Windows recipes may stack multiple `<PATH` envmods; each one prepends to `PATH`, which is the preferred way to expose both W64dev and LLVM-MinGW tools by name
 - Windows recipes should pin `LD`, `AR`, `RANLIB`, `GREP`, `EGREP`, `FGREP`, `EGREP_TRADITIONAL`, `SED`, `AWK`, and `M4` with `+NAME=...` envmods when autoconf does not reliably discover them by PATH lookup alone
 - When a `./configure`-generated file still contains raw backslash-heavy Windows paths, the skill should first prefer tool-name envvars plus PATH exposure, and only then use GNU `sed --in-place` to repair generated files; use `sed -f FILE --in-place` to avoid quoting issues
+- If the skill must use an inline `sh -c` or `cmd /c` payload, it should point to <https://raw.githubusercontent.com/diskuv/dk/refs/heads/V2_5/docs/ESCAPING.md> and treat the payload as a VSL string literal inside the JSON string
 - Recipe commands should be hermetic and should not invoke host `powershell`; rely on declared tools and packaged shell/toolchain commands instead
 - Source archives belong in `*.Bundle.values.jsonc`
 - GNU source archives in `*.Bundle.values.jsonc` should use at least 10 geographically dispersed mirrors in their GNU origin listing
