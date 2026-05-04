@@ -110,6 +110,7 @@ The skill guidance itself should clearly state:
 - Source archives belong in `*.Bundle.values.jsonc`
 - GNU source archives in `*.Bundle.values.jsonc` should use at least 10 geographically dispersed mirrors in their GNU origin listing
 - After adding or changing `dk.u` assets, run `Shell.exe update` in development checkouts (or `./dk0 update` otherwise) before consuming those assets
+- Generated or committed reusable `.sh` asset scripts must use LF line endings, and the repo should carry `.gitattributes` guidance such as `*.sh text eol=lf` so script asset checksums stay portable across Windows, Linux, and macOS checkouts
 - Reusable repo-local assets should be exposed through an asset library in `dk.u`, using the workspace script's library cell rather than `root` or the deprecated `dk0` cell
 - 32-bit GnuWin32 bootstrap binaries may be exposed for `Release.Windows_x86`, `Release.Windows_x86_64`, and `Release.Windows_arm64` when they are only host-side tools, following the same copy-to-`${SLOT.request}/bin` pattern as `CommonsBase_GNU.Grep@2.5.4+gnuwin32-20090213`
 - Linux validation should use Docker, WSL2, or a Linux host

@@ -88,6 +88,14 @@ If you add or change reusable local assets declared in `dk.u`:
 Do this **before** trying to consume those assets. Newly declared `dk.u` assets
 are not immediately visible until the update step has refreshed the generated state.
 
+If you add or generate reusable `.sh` asset scripts:
+
+1. Write them with **LF** line endings, not CRLF.
+2. Ensure the repository has `.gitattributes` guidance such as `*.sh text eol=lf`
+   so checkout conversion does not change dk asset checksums across platforms.
+3. Treat this as required for portable asset checksums; Windows CRLF conversion can
+   otherwise make the same script hash differently from Linux/macOS checkouts.
+
 If `Shell.exe` commands appear to be reusing stale build artifacts:
 
 1. Delete the workspace `t/` build directory.
@@ -205,6 +213,10 @@ For a typical upstream autoconf project:
 12. Run `make install`
 13. Prune non-reproducible or unwanted outputs only when the repository already follows that pattern
 14. Declare outputs precisely for every supported slot
+
+When helper shell scripts are needed as reusable package assets, prefer storing
+them as committed `.sh` files with LF endings and keep `.gitattributes`
+enforcing `*.sh text eol=lf` so the packaged asset checksum is stable.
 
 When writing the PATH wiring, prefer the repository's existing envmod pattern,
 for example:
