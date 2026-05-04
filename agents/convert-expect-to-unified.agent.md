@@ -89,6 +89,31 @@ Important:
 - `Printf.printf` and `print_endline` are not captured as expected response text
 - Include REPL signature lines like `val foo : ... = <fun>` in expected output
 
+Prefer readable rendered documentation over raw OCaml value dumps:
+
+- When examples are meant for humans to read as docs, emit Markdown with
+  `\markdown\;` instead of relying on raw `String.t = ...` or
+  `(string, string) result = ...` output.
+- Use small helper printers that format comparisons as Markdown tables or short
+  Markdown blocks so rendered `EXAMPLES.md` reads like documentation, not like a
+  transcript of OCaml escape sequences.
+- Prefer labels such as scenario/helper/raw text/rendered result/meaning when
+  presenting example-driven output.
+- Use project-appropriate Markdown code formatting for tricky strings with
+  backticks or quotes; do not assume HTML `<code>` tags are always the clearest
+  rendering in Markdown previews.
+
+Reference style:
+
+- `https://github.com/jonahbeckford/ocaml-re/blob/make-literate-tests/EXAMPLES.md.ml.u`
+
+That file is a good model for:
+
+- helper functions that print Markdown directly
+- examples that render as readable comparison tables
+- literate tests whose rendered Markdown is substantially nicer than the raw
+  OCaml REPL output
+
 ### Step 4: Wire dune and run UCramRunner
 
 Build and test first:
