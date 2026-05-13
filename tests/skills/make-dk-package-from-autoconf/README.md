@@ -104,8 +104,12 @@ The skill guidance itself should clearly state:
 - Windows `Release.Windows_*` slots are cross-compiles from the current Windows execution ABI
 - Windows recipes must prepend the extracted `CommonsBase_LLVM.Toolchain.MinGW@21.1.8+rev-20251216` `bin` directory to `PATH` so MinGW compiler driver names resolve during `configure` and `make`
 - Windows recipes may stack multiple `<PATH` envmods; each one prepends to `PATH`, which is the preferred way to expose both W64dev and LLVM-MinGW tools by name
-- Windows recipes should pin `LD`, `AR`, `RANLIB`, `GREP`, `EGREP`, `FGREP`, `EGREP_TRADITIONAL`, `SED`, `AWK`, and `M4` with `+NAME=...` envmods when autoconf does not reliably discover them by PATH lookup alone
-- When a `./configure`-generated file still contains raw backslash-heavy Windows paths, the skill should first prefer tool-name envvars plus PATH exposure, and only then use GNU `sed --in-place` to repair generated files; use `sed -f FILE --in-place` to avoid quoting issues
+- Windows recipes should pin `LD`, `AR`, `RANLIB`, `WINDRES`, `GREP`, `EGREP`, `FGREP`, `EGREP_TRADITIONAL`, `SED`, `AWK`, and `M4` with `+NAME=...` envmods when autoconf does not reliably discover them by PATH lookup alone
+- When a `./configure`-generated file still contains raw backslash-heavy Windows paths, the skill should first prefer tool-name envvars plus PATH exposure, and only then use GNU `sed --in-place` to repair generated files; use `sed -f FILE --in-place` or GNU `find ... -exec sed -i ...` to avoid quoting issues
+- When Windows GNU make still behaves like `cmd.exe`, the skill should explicitly mention rewriting generated `Makefile` `SHELL = /bin/sh` lines to `sh.exe` before running `make`
+- When gnulib or upstream makefiles generate Windows resource targets, the skill should explicitly mention pinning `WINDRES` to the target `*-w64-mingw32-windres` tool before `configure`; otherwise generated `Makefile`s can leave `WINDRES =` empty and later run a broken bare `-i file.rc ...` command
+- When libtool installs static archives on Windows, the skill should mention rewriting generated `libtool` `old_postinstall_cmds` lines so archive install paths remain quoted during `chmod` and `ranlib`
+- When Windows static-library builds still leave tool executables unresolved, the skill should mention injecting the full archive chain at the final executable link layer as well (for example by rewriting generated tool `Makefile` `LIBS =` lines), not just at `configure` or library-link time
 - If the skill must use an inline `sh -c` or `cmd /c` payload, it should point to <https://raw.githubusercontent.com/diskuv/dk/refs/heads/V2_5/docs/ESCAPING.md> and treat the payload as a VSL string literal inside the JSON string
 - Recipe commands should be hermetic and should not invoke host `powershell`; rely on declared tools and packaged shell/toolchain commands instead
 - Source archives belong in `*.Bundle.values.jsonc`
@@ -113,6 +117,7 @@ The skill guidance itself should clearly state:
 - After adding or changing `dk.u` assets, run `Shell.exe update` in development checkouts (or `./dk0 update` otherwise) before consuming those assets
 - Generated or committed reusable `.sh` asset scripts must use LF line endings, and the repo should carry `.gitattributes` guidance such as `*.sh text eol=lf` so script asset checksums stay portable across Windows, Linux, and macOS checkouts
 - Reusable repo-local assets should be exposed through an asset library in `dk.u`, using the workspace script's library cell rather than `root` or the deprecated `dk0` cell
+- Windows commands should use plain `$(get-object ...)/bin/tool.exe` in direct command position; keep `--path=absnative` for envmods or arguments that need a native absolute path string
 - 32-bit GnuWin32 bootstrap binaries may be exposed for `Release.Windows_x86`, `Release.Windows_x86_64`, and `Release.Windows_arm64` when they are only host-side tools, following the same copy-to-`${SLOT.request}/bin` pattern as `CommonsBase_GNU.Grep@2.5.4+gnuwin32-20090213`
 - Linux validation should use Docker, WSL2, or a Linux host
 - macOS validation should use a macOS machine or CI when no macOS host is available

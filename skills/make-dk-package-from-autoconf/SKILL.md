@@ -145,7 +145,7 @@ means:
 6. If autoconf discovery is unreliable on Windows, explicitly pin host-side
    tools and binutils with envmods such as `+GREP=...`, `+EGREP=...`,
    `+FGREP=...`, `+EGREP_TRADITIONAL=...`, `+SED=...`, `+LD=...`,
-   `+AR=...`, and `+RANLIB=...`
+   `+AR=...`, `+RANLIB=...`, and `+WINDRES=...`
 7. The result is a cross-compile from the current Windows execution ABI to the
    requested Windows target ABI
 
@@ -199,7 +199,12 @@ For a typical upstream autoconf project:
    - `+GREP=...`, `+EGREP=...`, `+FGREP=...`, `+EGREP_TRADITIONAL=...` for a GNU grep provider
    - `+SED=...` for a GNU sed provider
    - `+AWK=...` and `+M4=...` for host-side GNU awk and GNU m4 providers
-8. When a `./configure`-generated file still bakes in raw backslash-heavy Windows
+8. If the package or gnulib emits Windows resource targets, pin
+   `+WINDRES=...` to the target `*-w64-mingw32-windres` tool before
+   `./configure`; otherwise generated `Makefile`s can leave `WINDRES =`
+   empty and later resource builds collapse into a bare `-i file.rc ...`
+   command.
+9. When a `./configure`-generated file still bakes in raw backslash-heavy Windows
    paths, handle it in this priority order:
    - first, avoid fragile absolute Windows paths by preferring tool names in
      envvars and exposing those tools on `PATH`
@@ -208,8 +213,8 @@ For a typical upstream autoconf project:
    - if you must pass a shell payload like `sh -c ...` directly in a values file,
      consult https://raw.githubusercontent.com/diskuv/dk/refs/heads/V2_5/docs/ESCAPING.md and quote the payload as a VSL string
      literal inside the JSON string
-9. Commands inside dk package recipes should be hermetic. Do not invoke host
-   `powershell` from recipe commands; rely on declared tools and scripts that run
+10. Commands inside dk package recipes should be hermetic. Do not invoke host
+    `powershell` from recipe commands; rely on declared tools and scripts that run
    under the packaged shell/toolchain instead
 10. Run `./configure` with explicit build/host triples and compiler selection
 11. Run `make`
@@ -244,10 +249,17 @@ priority toolchain last if it should appear first on the effective `PATH`.
 Non-`PATH` envmods such as `+LD=...` or `+GREP=...` are useful when autoconf
 probes reject otherwise reachable tools on Windows.
 
-When you need to repair a `./configure`-generated file that contains raw
-backslash Windows paths, prefer a hermetic helper that runs under the packaged
-shell and GNU sed. Use `sed -f FILE --in-place` instead of embedding fragile
-sed expressions directly in recipe arguments.
+For a direct executable in the first position of a `commands` array on Windows, use plain `$(get-object ...)/bin/tool.exe`. Reserve
+`--path=absnative` for envmods, flags, or other arguments that need a native absolute path string.
+
+When you need to repair a `./configure`-generated file, prefer a hermetic helper that runs under the packaged shell and GNU sed. Common Windows fixes are:
+
+1. Rewrite raw backslash-heavy Windows paths in generated helper files.
+2. Rewrite generated `Makefile` lines such as `SHELL = /bin/sh` to `sh.exe` before `make` runs, because GNU make on Windows may ignore `SHELL`/`MAKESHELL` environment overrides and fall back to `cmd.exe`.
+3. For libtool-based static-library installs on Windows, rewrite generated `libtool` `old_postinstall_cmds` lines so `$oldlib` and `$tool_oldlib` stay quoted; otherwise `chmod`/`ranlib` can mis-handle backslash-heavy install paths during `make install`.
+4. If the package's final Windows tool executables still miss symbols after the library archives were built successfully, rewrite the generated tool `Makefile` so the final executable link layer also carries the full static archive chain (for example `LIBS = .../libhogweed.a .../libnettle.a .../libgmp.a`) instead of assuming `pkg-config` or `.la` propagation will carry it.
+
+Prefer GNU `find` plus GNU `sed --in-place` for those edits so the recipe stays hermetic. A simple replacement like `sed -i s|/bin/sh$|sh.exe|` is great.
 
 If you cannot avoid an inline `sh -c` or `cmd /c` payload, read
 ESCAPING.md first. dk command arrays hold VSL expressions, so a
