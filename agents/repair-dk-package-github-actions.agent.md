@@ -62,6 +62,15 @@ If the workflow is tag-driven, validate changes by:
 
 Do not push the branch just to test CI when the workflow is tag-driven.
 
+If several local-only validation commits accumulate and the branch itself has
+not been pushed, clean them up after CI passes by:
+
+1. creating a safety tag such as `gnu-small-commits` at the pre-rewrite tip
+2. identifying the pre-session or pre-validation baseline commit
+3. rewriting the local-only commits after that baseline into a few larger
+   commits that follow the repository's commit-message guidance
+4. keeping the safety tag and old validation tags until handoff or review
+
 ### Step 4: Observe the run with `gh`
 
 Use `gh` commands such as:

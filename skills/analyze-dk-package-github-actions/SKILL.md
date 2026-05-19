@@ -109,6 +109,14 @@ If the workflow is tag-driven, the preferred validation path is:
 
 Do not push the branch just to test CI when the workflow is tag-driven.
 
+If repeated tag-only validation requires several local-only commits and the
+branch itself has not been pushed, note this cleanup path for the next agent:
+
+1. create a safety tag like `gnu-small-commits` at the pre-rewrite tip
+2. identify the session baseline commit before the validation-only commits
+3. rewrite the local-only commits after that baseline into a few larger commits
+4. keep the safety tag and old validation tags until handoff or review
+
 ## Step 4: Recognize common dk-package GitHub Actions failure modes
 
 The analysis should help later agents recognize these patterns:

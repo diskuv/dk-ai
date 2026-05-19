@@ -36,12 +36,16 @@ Pass only if all are true:
    bootstrap consistency issue before blaming artifacts.
 5. The agent recognizes `startup_failure` with zero jobs as a workflow/action
    policy problem first.
+6. If the workflow fix took several local-only validation commits, the agent
+   proposes a safety tag and a post-validation local history rewrite rather
+   than leaving the branch as a stack of tiny commits.
 
 Fail if any are observed:
 
 - workflow edits before the analysis gate completes
 - hardcoded release prefix `2.5` without repository evidence
 - branch-push validation when the analyzed workflow is tag-driven
+- no cleanup path after several local-only validation commits
 - immediate artifact blame for a `combine` producer mismatch
 
 ## Evidence to Capture

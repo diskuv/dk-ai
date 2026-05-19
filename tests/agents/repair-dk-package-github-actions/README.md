@@ -50,6 +50,13 @@ For a tag-driven workflow, confirm that the agent prefers:
 
 Fail if the agent says to push the branch just to test CI.
 
+If the scenario includes several local-only validation commits, also confirm
+that the agent allows the post-validation cleanup flow:
+
+1. safety tag at the pre-rewrite tip
+2. local history rewrite after the known baseline commit
+3. a few larger replacement commits instead of the small validation commits
+
 ### Step 4: Combine-failure diagnosis
 
 Confirm that the agent treats producer mismatches as a workflow bootstrap
@@ -73,6 +80,7 @@ The agent should show evidence of:
 - `gh`-based run discovery and observation
 - tag-prefix derivation from `etc/dk/d/*.json` rather than a hardcoded `2.5`
 - tag-only validation guidance for tag-driven workflows
+- safety-tag plus local-history-cleanup guidance for unpushed validation commits
 - diagnosis of `combine` producer mismatches from inconsistent workflow
   bootstrap settings
 - diagnosis of `startup_failure` from action allowlists or workflow validation
@@ -83,6 +91,7 @@ The agent should show evidence of:
 - [ ] `gh` preflight
 - [ ] `gh`-based run discovery
 - [ ] Tag-only validation flow
+- [ ] Post-validation safety-tag cleanup flow
 - [ ] Derived release tag prefix
 - [ ] Producer-mismatch diagnosis
 - [ ] Temporary disablement guidance for an outlier job
