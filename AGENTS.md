@@ -334,6 +334,13 @@ Before committing a new skill or agent:
 - **Descriptions**: From prose or `*.values.{jsonc,lua}`
 - **Patterns**: Multi-command detection, slot extraction
 
+### make-dk-package-from-autoconf
+
+- **Purpose**: Create or extend dk packages for autoconf-based upstream projects, including Windows LLVM-MinGW cross-compilation guidance
+- **Recipe references**: Use `CommonsBase_GNU` for the full autoconf/toolchain recipe patterns (`Make.Autoconf`, `Make.Win32.LLVM_MinGW`, W64dev, MinGW)
+- **Layout references**: Use `CommonsBase_FileMagic` for a simpler standalone package-repo layout (`dk.u`, `dist-any.u`, workflow, distribution metadata)
+- **Layout choice**: Prefer the FileMagic layout for compact single-package repos with one honest `dist-any.u`; prefer the GNU layout for larger multi-package or split-distribution repos
+
 ---
 
 ## Questions and Guidelines
