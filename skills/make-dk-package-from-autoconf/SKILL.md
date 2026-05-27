@@ -1,6 +1,6 @@
 ---
 name: make-dk-package-from-autoconf
-description: Create or extend a dk package for an autoconf-based upstream project, including Windows cross-compilation, dist-win32 examples, and Linux/macOS validation guidance.
+description: Create or extend a dk package for an autoconf-based upstream project, including Windows cross-compilation plus guidance for choosing a compact FileMagic-style repo layout or a larger GNU-style layout.
 ---
 
 ## Step 1: Analyze the dk package repository
@@ -10,14 +10,20 @@ description: Create or extend a dk package for an autoconf-based upstream projec
 Try to read the following files and directories directly from the workspace:
 
 1. `dk.u` in the repository root
-2. All `dist-*.u/run.u` files, especially `dist-win32.u/run.u`
+2. All `dist-*.u/run.u` files, especially `dist-any.u/run.u` or `dist-win32.u/run.u`
 3. The package's primary `etc/dk/v/*.values.jsonc` module
 4. The package's `*.Bundle.values.jsonc` source-asset module
-5. Existing autoconf and Windows cross-compilation reference files in the git project `https://github.com/dkpkg/CommonsBase_GNU.git`, especially:
-   - `etc/dk/v/Make.Autoconf.values.jsonc`
-   - `etc/dk/v/Make.Win32.LLVM_MinGW.values.jsonc`
-   - `etc/dk/v/Toolchain.W64dev*.values.jsonc`
-   - `etc/dk/v/Toolchain.MinGW.values.jsonc`
+5. Existing reference files in:
+   - `https://github.com/dkpkg/CommonsBase_GNU.git` for the full autoconf and Windows cross-compilation recipe, especially:
+     - `etc/dk/v/Make.Autoconf.values.jsonc`
+     - `etc/dk/v/Make.Win32.LLVM_MinGW.values.jsonc`
+     - `etc/dk/v/Toolchain.W64dev*.values.jsonc`
+     - `etc/dk/v/Toolchain.MinGW.values.jsonc`
+   - `https://github.com/dkpkg/CommonsBase_FileMagic.git` for the simpler standalone package-repo layout, especially:
+     - `dk.u`
+     - `dist-any.u/run.u`
+     - `.github/workflows/distribute-2.5.yml`
+     - `etc/dk/d/2.5.0.dist.json`
 6. Any package dependency modules that must also be Windows-enabled for the target package to build
 
 Do not ask the user to paste these files.
@@ -165,16 +171,30 @@ are **out of scope** for this skill, even though
 `Make.Win32.LLVM_MinGW.values.jsonc` is still a valuable reference for the
 cross-compilation recipe.
 
-### Step 2.4 — Reuse the right examples
+### Step 2.4 — Reuse the right examples and layout
 
 Prefer these repository patterns:
 
 - `Make.Autoconf.values.jsonc` for the baseline autoconf flow
 - `Make.Win32.LLVM_MinGW.values.jsonc` for the Windows LLVM-MinGW cross-compile recipe
+- `CommonsBase_FileMagic` for the compact standalone repo layout (`dk.u`, `dist-any.u`, workflow, and distribution metadata)
 
 Do **not** model new work on `Make.Win32.values.jsonc` because that file uses
 GNU Make's specialized non-autoconf Windows build script instead of the general
 autoconf flow this skill is meant to produce.
+
+Prefer the `CommonsBase_FileMagic` layout when:
+
+1. The repository is packaging one primary upstream deliverable or a small family of closely related modules.
+2. One checked-in `dist-any.u/run.u` can honestly describe and validate the package surface across target ABIs.
+3. The repo does not need the larger multi-package or per-surface checked-in distribution layout used by `CommonsBase_GNU`.
+4. You need a simpler example for `dk.u`, `.github/workflows/distribute-2.5.yml`, and `etc/dk/d/2.5.0.dist.json` without GNU's extra toolchain/provider packages.
+
+Prefer the `CommonsBase_GNU` layout when:
+
+1. The package recipe itself depends on GNU's autoconf cross-compilation patterns and helper toolchain modules.
+2. The repository already uses multiple checked-in `dist-*.u/run.u` scripts or separate distribution surfaces.
+3. The repo is itself providing shared GNU/autoconf build tools, toolchains, or several coordinated packages rather than one compact package.
 
 ### Step 2.5 — Wire package dependencies explicitly
 
@@ -297,10 +317,15 @@ slots intact unless the same refactor is needed to keep the logic consistent.
 
 ---
 
-## Step 4: Update `dist-win32.u/run.u`
+## Step 4: Update the checked-in distribution script
 
-You must add or update `dist-win32.u/run.u` with at least one working example
-for each Windows-enabled package.
+You must add or update the repository's checked-in distribution script with at
+least one working example for each package surface you touched.
+
+Choose the layout that matches the repository:
+
+1. Prefer `dist-any.u/run.u` for a compact standalone package repo like `CommonsBase_FileMagic`.
+2. Keep `dist-win32.u/run.u` or multiple `dist-*.u/run.u` files only when the repository already splits its distribution surface that way, as in `CommonsBase_GNU`.
 
 Requirements for each package section:
 
@@ -361,6 +386,6 @@ When done, report:
 - Files created or updated
 - Which package modules gained new slots
 - Which `.Bundle` modules provide the source assets
-- Which `dist-win32.u/run.u` sections/examples were added or revised
+- Which checked-in distribution script sections/examples were added or revised
 - How Windows, Linux, and macOS validation was performed
 - Any blockers or package-specific caveats that still remain

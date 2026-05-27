@@ -9,7 +9,7 @@ The skill is meant to help create or extend dk packages for autoconf-based
 upstream projects. It requires the agent to inspect:
 
 - `dk.u` in the repository root
-- `dist-*.u/run.u`, especially `dist-win32.u/run.u`
+- `dist-*.u/run.u`, especially `dist-any.u/run.u` or `dist-win32.u/run.u`
 - Primary package `*.values.jsonc` files
 - Package `*.Bundle.values.jsonc` source-asset modules
 - Existing autoconf and Windows cross-compilation reference files
@@ -19,16 +19,22 @@ output from the same repository.
 
 ## Recommended test repository
 
-Use `CommonsBase_GNU` because it already contains:
+Use one of these depending on what part of the skill you want to exercise:
 
-- `Make.Autoconf.values.jsonc`
-- `Make.Win32.LLVM_MinGW.values.jsonc`
-- `Toolchain.W64devkit.values.jsonc`
-- `dist-win32.u/run.u`
+- `CommonsBase_GNU` for the full autoconf and Windows cross-compilation recipe guidance:
+  - `Make.Autoconf.values.jsonc`
+  - `Make.Win32.LLVM_MinGW.values.jsonc`
+  - `Toolchain.W64devkit.values.jsonc`
+  - split `dist-*.u/run.u` examples
+- `CommonsBase_FileMagic` for the simpler standalone repo layout guidance:
+  - `dk.u`
+  - `dist-any.u/run.u`
+  - `.github/workflows/distribute-2.5.yml`
+  - `etc/dk/d/2.5.0.dist.json`
 
 ## Quick Start
 
-1. Run the PowerShell helper against `CommonsBase_GNU`
+1. Run the PowerShell helper against `CommonsBase_GNU` or `CommonsBase_FileMagic`
 2. Run the shell helper against the same checkout
 3. Compare outputs with the provided validation scripts
 
@@ -38,7 +44,7 @@ Use `CommonsBase_GNU` because it already contains:
 
 ```powershell
 $skillPath = "path\to\dk-ai\skills\make-dk-package-from-autoconf"
-$repoPath = "path\to\CommonsBase_GNU"
+$repoPath = "path\to\CommonsBase_GNU" # or path\to\CommonsBase_FileMagic
 $outFile = Join-Path $env:TEMP 'make-dk-package-from-autoconf-ps1.txt'
 
 Set-Location $repoPath
@@ -52,7 +58,7 @@ On Windows, prefer Git Bash. On Unix, any POSIX shell is fine.
 
 ```powershell
 $skillPath = "path\to\dk-ai\skills\make-dk-package-from-autoconf"
-$repoPath = "path\to\CommonsBase_GNU"
+$repoPath = "path\to\CommonsBase_GNU" # or path\to\CommonsBase_FileMagic
 $bashPath = "C:\Program Files\Git\bin\bash.exe"
 $outFile = Join-Path $env:TEMP 'make-dk-package-from-autoconf-sh.txt'
 
@@ -121,7 +127,7 @@ The skill guidance itself should clearly state:
 - 32-bit GnuWin32 bootstrap binaries may be exposed for `Release.Windows_x86`, `Release.Windows_x86_64`, and `Release.Windows_arm64` when they are only host-side tools, following the same copy-to-`${SLOT.request}/bin` pattern as `CommonsBase_GNU.Grep@2.5.4+gnuwin32-20090213`
 - Linux validation should use Docker, WSL2, or a Linux host
 - macOS validation should use a macOS machine or CI when no macOS host is available
-- `dist-win32.u/run.u` must be updated with package-specific prose and working examples
+- The skill should explain when to prefer a compact `dist-any.u/run.u` layout like `CommonsBase_FileMagic` versus a split `dist-win32.u/run.u` or multi-`dist-*.u` layout like `CommonsBase_GNU`
 
 ## Troubleshooting
 
