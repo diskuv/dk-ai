@@ -88,13 +88,19 @@ If you add or change reusable local assets declared in `dk.u`:
 Do this **before** trying to consume those assets. Newly declared `dk.u` assets
 are not immediately visible until the update step has refreshed the generated state.
 
-If you add or generate reusable `.sh` asset scripts:
+If you add or generate reusable bundled text assets such as `.sh`, `.cmd`,
+`.awk`, Markdown, or extensionless helper scripts:
 
 1. Write them with **LF** line endings, not CRLF.
-2. Ensure the repository has `.gitattributes` guidance such as `*.sh text eol=lf`
-   so checkout conversion does not change dk asset checksums across platforms.
+2. Ensure the repository has `.gitattributes` guidance for every bundled text
+   asset type so checkout conversion does not change dk asset checksums across
+   platforms.
 3. Treat this as required for portable asset checksums; Windows CRLF conversion can
-   otherwise make the same script hash differently from Linux/macOS checkouts.
+   otherwise make the same bundled asset hash and file size differ from Linux/macOS
+   checkouts.
+4. After changing line-ending policy or any bundled asset contents, delete the
+   workspace `t/` directory and rerun the relevant `get-bundle ... --autofix`
+   validation. Both `checksum.sha256` and `size` can legitimately change.
 
 If `Shell.exe` commands appear to be reusing stale build artifacts:
 
@@ -111,6 +117,11 @@ an asset library in `dk.u`. The resulting cell is the workspace script's
 library cell (for example `cell://CommonsBase_GNU` for a `CommonsBase_GNU`
 workspace script). Do **not** introduce the deprecated `dk0` cell, and do not
 route reusable package assets through `root`.
+
+If you find an older `Lookup.values.jsonc` bundle whose mirrors use
+`cell://dk0/...`, delete or migrate it instead of extending it. Declare the
+replacement assets in `dk.u`, run `update`, and point values files at the
+generated workspace asset modules.
 
 ### Step 2.2 — Preserve Linux and macOS builds
 
