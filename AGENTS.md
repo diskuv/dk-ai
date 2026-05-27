@@ -340,6 +340,7 @@ Before committing a new skill or agent:
 - **Recipe references**: Use `CommonsBase_GNU` for the full autoconf/toolchain recipe patterns (`Make.Autoconf`, `Make.Win32.LLVM_MinGW`, W64dev, MinGW)
 - **Layout references**: Use `CommonsBase_FileMagic` for a simpler standalone package-repo layout (`dk.u`, `dist-any.u`, workflow, distribution metadata)
 - **Layout choice**: Prefer the FileMagic layout for compact single-package repos with one honest `dist-any.u`; prefer the GNU layout for larger multi-package or split-distribution repos
+- **Validation rule**: Treat local validation as a first pass only; for dk packages, finish with tag-driven CI validation unless the user explicitly says not to
 
 ---
 
