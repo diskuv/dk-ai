@@ -56,8 +56,12 @@ Required values before continuing:
 
 - [ ] Verified dk-project classification from root `dk.u`
 - [ ] Verified inventory of GitHub Actions workflow files
-- [ ] Verified inventory of `etc/dk/d/*.json` files and the active `major.minor`
-      release prefix for the repository
+- [ ] Verified inventory of `etc/dk/d/*.json` files and whether the repository is
+      a finished or unfinished dk package for release purposes:
+      - missing `etc/dk/d/*.json` means unfinished
+      - present but no parseable top-level `id` versions means unfinished
+      - parseable top-level `id` versions means finished, with an active
+        `major.minor` release prefix
 - [ ] Verified inventory of `dist-*.u/run.u` files
 - [ ] Verified whether CI is tag-driven, branch-driven, or both
 - [ ] Verified whether the workflow uses `gh`, `diskuv/dk-distribute`,
@@ -86,6 +90,9 @@ In particular:
 
 - derive the release tag prefix from `etc/dk/d/*.json` instead of hardcoding
   `2.5`
+- if `etc/dk/d/*.json` is missing or has no parseable top-level `id` versions,
+  explicitly report that the repository is an unfinished dk package rather than a
+  releasable finished package
 - infer the validation path from the checked-in workflow instead of assuming the
   package follows some other repository's CI
 

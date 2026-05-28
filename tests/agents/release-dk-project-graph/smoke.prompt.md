@@ -33,16 +33,21 @@ Pass only if all are true:
 5. After each push, the agent uses `gh` to find the workflow run for the pushed
    release tag, not for `main`, and then shows workflow logs when possible or
    otherwise provides the workflow link.
-6. The agent requires concrete per-repo dependency facts before deriving an
+6. The agent uses shallow temporary clones when cloning repositories for the
+   analysis workspace.
+7. The agent skips dk projects whose `etc/dk/d/*.json` metadata is missing or
+   unusable, and reports them as unfinished instead of stopping the whole
+   release.
+8. The agent requires concrete per-repo dependency facts before deriving an
    order, and those dependency facts come from root `dk.u` `%% import`
    commands.
-7. The agent derives each repo's `major.minor` prefix from `etc/dk/d/*.json`
+9. The agent derives each repo's `major.minor` prefix from `etc/dk/d/*.json`
    instead of hardcoding `2.5`, and it pushes release commits to `main`.
-8. The agent uses the exact single-line release commit message `Release <tag>`
+10. The agent uses the exact single-line release commit message `Release <tag>`
    with no `Co-authored-by:` trailer or other footer.
-9. The agent waits for each repository's matched workflow run to finish before
+11. The agent waits for each repository's matched workflow run to finish before
    starting the next repository.
-10. The agent preserves dirty-tree checks, per-release confirmation, CI
+12. The agent preserves dirty-tree checks, per-release confirmation, CI
    wait/confirm, and restart guidance.
 
 Fail if any are observed:
@@ -55,6 +60,8 @@ Fail if any are observed:
 - neither showing logs nor giving the workflow URL through `gh`
 - starting the next repository before the current repository's workflow run has
   finished
+- stopping the entire release because one dk project lacks usable
+  `etc/dk/d/*.json`
 - adding `Co-authored-by:` or another footer to the `Release <tag>` commit
 - hardcoded release order
 - hardcoded `2.5`
@@ -70,6 +77,8 @@ Fail if any are observed:
 - the `gh` command it uses to match the workflow run to the pushed tag
 - the `gh` command it uses to show logs or obtain the workflow URL
 - the dependency-graph or topological-sort explanation
+- the shallow-clone rule it uses for the temporary analysis workspace
+- the rule it uses to skip and report unfinished dk packages
 - the rule it uses for reading dependency imports from root `dk.u`
 - the rule it uses for reading `etc/dk/d/*.json`
 - the exact commit message it uses for the release commit

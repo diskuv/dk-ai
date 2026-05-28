@@ -11,6 +11,7 @@ dk project, it then identifies:
 
 - Root `dk.u` classification
 - Dependencies from root `dk.u` `%% import` commands
+- `etc/dk/d/*.json` inventory for finished-vs-unfinished dk-package classification
 - Modules referenced in `dist-*.u/run.u` unified scripts
 - Value shell commands (get-object, post-object, enter-object, install-object, get-asset, get-bundle)
 - Slot information for each module
@@ -71,9 +72,10 @@ Both outputs should contain:
 
 1. **DK PROJECT DETECTION section** identifying whether root `dk.u` exists
 2. **Dependencies section** with `%% import` commands from root `dk.u`
-3. **DIST-*.U/RUN.U FILES section** listing all unified scripts
-4. **VALUES FILES section** with `*.values.{jsonc,lua}` files
-5. **MODULE@VERSION EXTRACTION SUMMARY** identifying modules and commands used
+3. **DIST VERSION FILES section** with `etc/dk/d/*.json` inventory and contents
+4. **DIST-*.U/RUN.U FILES section** listing all unified scripts
+5. **VALUES FILES section** with `*.values.{jsonc,lua}` files
+6. **MODULE@VERSION EXTRACTION SUMMARY** identifying modules and commands used
 
 #### Compare with the test comparison script (Unix)
 
@@ -121,9 +123,11 @@ If a section is empty (e.g., no `dist-*.u` folders found), the script will note 
 When the `analyze-dk-project` skill is used by agents:
 
 1. The agent calls the skill to classify the repository by root `dk.u`
-2. The agent receives structured dk-project, module, dependency, and slot information
-3. The agent uses this information to filter repositories and plan subsequent operations
-4. The agent verifies that all critical information was extracted before proceeding
+2. The agent distinguishes finished dk packages from unfinished ones using
+   `etc/dk/d/*.json`
+3. The agent receives structured dk-project, module, dependency, and slot information
+4. The agent uses this information to filter repositories and plan subsequent operations
+5. The agent verifies that all critical information was extracted before proceeding
 
 ## Test Coverage
 
@@ -131,6 +135,8 @@ The skill testing should verify:
 
 - [ ] Root `dk.u` classification is reported
 - [ ] Dependency inventory from root `dk.u` `%% import` commands is complete
+- [ ] `etc/dk/d/*.json` inventory is reported
+- [ ] Missing or unusable `etc/dk/d/*.json` can be recognized as an unfinished dk package
 - [ ] All `dist-*.u/run.u` files are discovered
 - [ ] All `*.values.{jsonc,lua}` files are found
 - [ ] Module names are correctly extracted from commands

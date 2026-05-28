@@ -14,6 +14,8 @@ The helper outputs should include:
 - dk-project detection from root `dk.u`
 - workflow inventory from `.github/workflows/*`
 - `etc/dk/d/*.json` inventory and contents
+- finished-vs-unfinished dk-package state from the presence and parseability of
+  `etc/dk/d/*.json`
 - `dist-*.u/run.u` inventory and contents
 - GitHub Actions highlight lines for common dk-package CI patterns
 
@@ -98,6 +100,10 @@ Both helper outputs should contain:
 5. `=== DIST-*.U/RUN.U FILES ===`
 6. `=== GITHUB ACTIONS HIGHLIGHTS ===`
 
+The skill summary should also make it explicit whether the repository is a
+finished dk package or an unfinished one because `etc/dk/d/*.json` is missing
+or unusable.
+
 The highlights section should surface lines containing patterns such as:
 
 - `push:`
@@ -133,6 +139,7 @@ Check for:
 - [ ] Root `dk.u` classification is reported
 - [ ] Workflow files are discovered
 - [ ] `etc/dk/d/*.json` files are discovered
+- [ ] Missing or unusable `etc/dk/d/*.json` is reported as an unfinished dk package
 - [ ] `dist-*.u/run.u` files are discovered
 - [ ] Workflow contents are included
 - [ ] Highlights surface key GitHub Actions dk-package patterns

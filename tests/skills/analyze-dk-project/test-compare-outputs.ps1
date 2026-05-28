@@ -38,7 +38,8 @@ function Test-RequiredSections {
     $content = Get-Content -Path $File -Encoding UTF8 -Raw
     $requiredSections = @(
         '=== DK PROJECT DETECTION ===',
-        '=== DEPENDENCIES \(from dk\.u %% imports\) ===',
+        '=== DEPENDENCIES \(from root dk\.u %% import\) ===',
+        '=== DIST VERSION FILES \(etc/dk/d/\*\.json\) ===',
         '=== DIST-\*\.U/RUN\.U FILES ===',
         '=== VALUES FILES \(etc/dk/v/\*\.values\.\*\) ===',
         '=== MODULE@VERSION EXTRACTION SUMMARY ==='

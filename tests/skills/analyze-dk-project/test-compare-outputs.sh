@@ -24,11 +24,25 @@ check_required_sections() {
     
     printf "${CYAN}Checking %s output...${NC}\n" "$label"
     
-    if ! grep -q "=== DEPENDENCIES (from dk.u %% imports) ===" "$file" 2>/dev/null; then
+    if ! grep -q "=== DK PROJECT DETECTION ===" "$file" 2>/dev/null; then
+        printf "${RED}❌ Missing section: DK PROJECT DETECTION${NC}\n"
+        all_found=1
+    else
+        printf "${GREEN}✓ Found section: DK PROJECT DETECTION${NC}\n"
+    fi
+
+    if ! grep -q "=== DEPENDENCIES (from root dk.u %% import) ===" "$file" 2>/dev/null; then
         printf "${RED}❌ Missing section: DEPENDENCIES${NC}\n"
         all_found=1
     else
         printf "${GREEN}✓ Found section: DEPENDENCIES${NC}\n"
+    fi
+
+    if ! grep -q "=== DIST VERSION FILES (etc/dk/d/\*.json) ===" "$file" 2>/dev/null; then
+        printf "${RED}❌ Missing section: DIST VERSION FILES${NC}\n"
+        all_found=1
+    else
+        printf "${GREEN}✓ Found section: DIST VERSION FILES${NC}\n"
     fi
     
     if ! grep -q "=== DIST-\*.U/RUN.U FILES ===" "$file" 2>/dev/null; then

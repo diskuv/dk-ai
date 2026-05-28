@@ -129,7 +129,27 @@ else {
     Write-Utf8 -Path $absOut -Lines @("(dk.u file not found)")
 }
 
-# 3. Find and scan all dist-*.u/run.u files
+# 3. Find and scan all etc/dk/d/*.json files
+Write-Utf8 -Path $absOut -Lines @("", "=== DIST VERSION FILES (etc/dk/d/*.json) ===")
+$distVersionFiles = @()
+if (Test-Path -Path "etc\dk\d" -PathType Container) {
+    $distVersionFiles = Get-ChildItem -Path "etc\dk\d" -File -Filter "*.json" |
+        Sort-Object { Get-RepoRelativePath $_.FullName }
+}
+
+if ($distVersionFiles) {
+    foreach ($f in $distVersionFiles) {
+        $rel = Get-RepoRelativePath $f.FullName
+        Write-Utf8 -Path $absOut -Lines @($rel)
+        Write-Utf8 -Path $absOut -Lines @("", "=== $rel ===")
+        Write-Utf8 -Path $absOut -Lines (Get-Content -Encoding UTF8 $f.FullName)
+    }
+}
+else {
+    Write-Utf8 -Path $absOut -Lines @("(no etc/dk/d/*.json files found)")
+}
+
+# 4. Find and scan all dist-*.u/run.u files
 Write-Utf8 -Path $absOut -Lines @("", "=== DIST-*.U/RUN.U FILES ===")
 $distRunFiles = Get-ChildItem -Path . -Recurse -Filter "run.u" |
     Where-Object { $_.Directory.Name -match "^dist-.+\.u$" } |
@@ -146,7 +166,7 @@ else {
     Write-Utf8 -Path $absOut -Lines @("(no dist-*.u/run.u files found)")
 }
 
-# 4. Find and scan all etc/dk/v/*.values.{jsonc,lua} files
+# 5. Find and scan all etc/dk/v/*.values.{jsonc,lua} files
 # Extract filenames from JSON outputs (sample up to 100)
 Write-Utf8 -Path $absOut -Lines @("", "=== VALUES FILES (etc/dk/v/*.values.*) ===")
 if (Test-Path -Path "etc/dk/v" -PathType Container) {
@@ -203,7 +223,7 @@ else {
     Write-Utf8 -Path $absOut -Lines @("(etc/dk/v directory not found)")
 }
 
-# 5. Extract and summarize MODULE@VERSION references from run.u files
+# 6. Extract and summarize MODULE@VERSION references from run.u files
 Write-Utf8 -Path $absOut -Lines @("", "=== MODULE@VERSION EXTRACTION SUMMARY ===")
 $modulesSlots = @{}
 $moduleCommands = @{}

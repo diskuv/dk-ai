@@ -13,10 +13,13 @@ The goal is to verify that the agent:
 4. verifies `gh` is installed before relying on GitHub CLI workflow visibility
 5. uses `gh` to show running workflow logs when possible, or otherwise gives the
    user the workflow link
-6. derives rerelease order from package dependencies instead of a hardcoded list
-7. derives each repo's tag prefix from the largest `major.minor` version found
+6. uses shallow temporary clones when cloning owner repositories for analysis
+7. skips unfinished dk packages whose `etc/dk/d/*.json` metadata is missing or
+   unusable, and reports them instead of stopping the whole release
+8. derives rerelease order from package dependencies instead of a hardcoded list
+9. derives each repo's tag prefix from the largest `major.minor` version found
    in `etc/dk/d/*.json`
-8. preserves the original script's safety gates: dirty-tree checks, per-release
+10. preserves the original script's safety gates: dirty-tree checks, per-release
    confirmation, CI wait/confirm, and restart guidance
 
 ## Quick Start
@@ -66,13 +69,16 @@ Confirm that the agent:
 Confirm that the agent:
 
 1. enumerates/fetches the owner's repositories from GitHub
-2. invokes or explicitly depends on `analyze-dk-project` for each fetched repo
-3. keeps only repositories the skill classifies as dk projects via root `dk.u`
-4. builds a dependency graph from root `dk.u` `%% import` commands in the analyzed dk projects
-5. topologically sorts the repos instead of replaying a baked-in list
-6. reads `etc/dk/d/*.json` and derives the largest `major.minor` version per
+2. uses shallow temporary clones when cloning those repositories for analysis
+3. invokes or explicitly depends on `analyze-dk-project` for each fetched repo
+4. keeps only repositories the skill classifies as dk projects via root `dk.u`
+5. skips repositories the skill classifies as unfinished dk packages because
+   `etc/dk/d/*.json` is missing or unusable
+6. builds a dependency graph from root `dk.u` `%% import` commands in the analyzed finished dk packages
+7. topologically sorts the releasable repos instead of replaying a baked-in list
+8. reads `etc/dk/d/*.json` and derives the largest `major.minor` version per
    repo
-7. uses that derived prefix when forming release tags while keeping release commits on `main`
+9. uses that derived prefix when forming release tags while keeping release commits on `main`
 
 ### Step 5: Safety and recovery checks
 
@@ -96,11 +102,15 @@ The agent should show evidence of:
 - `gh --version` preflight before workflow visibility steps
 - install guidance such as `winget install --id GitHub.cli`, `brew install gh`,
   or `https://cli.github.com/` when `gh` is missing
-- a temporary clone/fetch workflow for the selected owner's repositories
+- a temporary shallow-clone/fetch workflow for the selected owner's repositories
 - a skill-driven root `dk.u` classification step before a repository is treated
   as a dk project
+- an explicit unfinished-dk-package classification when `etc/dk/d/*.json` is
+  missing or unusable
 - dependency discovery from root `dk.u` `%% import` commands
 - an explicit `analyze-dk-project` gate before release actions
+- skipped-report output for unfinished dk packages that were excluded from the
+  release set
 - a `gh`-based workflow discovery step after each push that matches the run to
   the pushed release tag
 - either visible `gh` log output or a workflow URL retrieved through `gh`
@@ -122,8 +132,14 @@ the prompt path is broken.
 ### Agent hardcodes 2.5 or pushes to V2_5
 
 If the agent uses `2.5` without deriving the version prefix from
-`etc/dk/d/*.json`, or if it pushes release commits to `V2_5` instead of
-`main`, the rerelease logic is not generic enough.
+`etc/dk/d/*.json` for finished packages, or if it pushes release commits to
+`V2_5` instead of `main`, the rerelease logic is not generic enough.
+
+### Agent stops on unfinished packages instead of skipping them
+
+If the agent halts the whole release because one dk project is missing usable
+`etc/dk/d/*.json`, the unfinished-package rule is broken. Those repositories
+should be skipped and reported, not treated as global blockers.
 
 ### Agent releases before analysis
 
@@ -174,7 +190,9 @@ on top of it for cross-repo rerelease work.
 - [ ] Missing-owner prompt path
 - [ ] Explicit-owner input path
 - [ ] `analyze-dk-project` gate per repository
+- [ ] Shallow temp clones for analysis
 - [ ] Skill-driven root `dk.u` classification
+- [ ] Unfinished dk packages are skipped and reported
 - [ ] `gh` preflight
 - [ ] `gh` install guidance when unavailable
 - [ ] Live workflow logs or workflow-link fallback via `gh`

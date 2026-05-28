@@ -41,17 +41,21 @@ Required facts before continuing:
 
 - verified repository inventory for the requested GitHub owner
 - a local clone or fetched worktree for each candidate dk repository
-- a skill-verified dk-project classification for each fetched repository based on
-  root `dk.u`
+- a skill-verified dk-project classification and finished-vs-unfinished package
+  state for each fetched repository based on root `dk.u` and `etc/dk/d/*.json`
 - per-repository dependency inventory from root `dk.u` `%% import` commands
 - a normalized package identity for each repository
 - a dependency graph that can be topologically sorted after filtering to repos
   owned by the requested GitHub owner
-- the largest `major.minor` version found in `etc/dk/d/*.json` for each repo
+- the largest `major.minor` version found in `etc/dk/d/*.json` for each finished
+  repo that will actually be released
 
 If any repository is missing the facts required to place it in the dependency
-graph or derive its release version prefix, stop and report the exact missing
-repo/file/fact. Do not guess.
+graph, stop and report the exact missing repo/file/fact. Do not guess.
+
+If a repository is a dk project but `etc/dk/d/*.json` is missing or has no
+parseable versions, classify it as an unfinished dk package, exclude it from the
+release set, and report it as skipped instead of stopping the whole release.
 
 ## Workflow
 
@@ -111,8 +115,16 @@ silently overwrite unrelated local clones.
 
 For each candidate repository:
 
-1. Clone it into the temporary workspace if it is not already present there.
+1. Clone it into the temporary workspace with a shallow clone for speed if it is
+   not already present there. Prefer non-interactive commands such as:
+
+   ```text
+   git clone --depth 1 <repo-url> <temp-path>
+   ```
+
 2. If it is already present in the temp workspace, fetch tags and remote refs.
+   Keep the existing temp clone shallow when a shallow fetch is sufficient for
+   the needed refs.
 3. If the temp clone has local modifications, stop instead of resetting or
    discarding changes.
 4. Run `analyze-dk-project` to classify the repository.
@@ -124,18 +136,24 @@ For each candidate repository:
 For each retained repository:
 
 1. Use the `analyze-dk-project` result as the repository's dk-project
-   classification source of truth.
+   classification source of truth, including whether it is a finished or
+   unfinished dk package.
 2. Capture dependencies from root `dk.u` `%% import` commands.
 3. Determine the repository's package identity, using normalized repository and
    dependency names to reconcile underscore/hyphen spelling differences.
-4. Read `etc/dk/d/*.json` directly and extract from each the toplevel `id` field.
-5. Determine the largest `major.minor` pair (the "newest" version) in the `id` fields of those JSON files.
+4. If the skill classifies the repository as unfinished because `etc/dk/d/*.json`
+   is missing or has no parseable versions, mark it as skipped and do not attempt
+   release-tag derivation for it.
+5. For each finished repository that remains in the release set, read
+   `etc/dk/d/*.json` directly and extract from each the toplevel `id` field.
+6. Determine the largest `major.minor` pair (the "newest" version) in the `id`
+   fields of those JSON files for each finished repository.
 
 Hard rule:
 
 - never reuse the old hardcoded `2.5` tag prefix
-- never continue if `etc/dk/d/*.json` is missing or has no parseable versions
-  for a repository that is about to be released
+- never attempt to release a repository that the skill classified as an
+  unfinished dk package
 
 ### Step 5: Build the rerelease order
 
@@ -145,7 +163,10 @@ root `dk.u` `%% import` commands reference packages produced by B.
 Then:
 
 1. Filter out dependencies that are not owned by the requested GitHub owner.
-2. Sort the remaining repositories lexically for stability, then topologically sort those lexically sorted repositories.
+2. Exclude repositories already classified as unfinished dk packages from the
+   release graph, but keep them in a skipped-report list.
+3. Sort the remaining repositories lexically for stability, then topologically
+   sort those lexically sorted repositories.
 4. If there is a cycle or unresolved ownership mapping, stop and report it.
 5. If `start_package` is supplied, resume from that node in the sorted order and
    skip earlier packages.
@@ -256,8 +277,12 @@ After the final repository is released, remind the user to:
 - Never hide workflow observability from the user: either show logs with `gh` or
   give the workflow URL obtained through `gh`.
 - Keep temporary clones isolated from unrelated worktrees.
-- Stop on cycles, ambiguous package mapping, missing version files, or dirty temp
-  clones instead of forcing progress.
+- Prefer shallow temp clones/fetches for the analysis workspace unless a
+  verified release step requires deeper history.
+- Stop on cycles, ambiguous package mapping, missing dependency facts needed for
+  graph construction, or dirty temp clones instead of forcing progress.
+- Skip and report unfinished dk packages that are missing usable
+  `etc/dk/d/*.json` metadata.
 
 ## Example invocations
 
@@ -274,4 +299,5 @@ When done, report:
 - derived `major.minor` prefix for each released repository
 - tags and release branches pushed
 - whether workflow logs were shown live or workflow URLs were provided
-- any repo that was skipped, blocked, or requires manual follow-up
+- any unfinished repo that was skipped and why
+- any repo that was blocked or requires manual follow-up
