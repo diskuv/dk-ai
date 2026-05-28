@@ -28,15 +28,15 @@ Self-update rule:
 | --- | --- | --- | --- |
 | `convert-expect-to-unified` | `agents/convert-expect-to-unified.agent.md` | Converting OCaml `ppx_expect` tests into `EXAMPLES.md.ml.u`, rendered docs, and dune wiring. | Must run `analyze-dune-project` first. Stop if package, library, expect-test, or helper-signature facts are missing. |
 | `convert-noweb-to-unified` | `agents/convert-noweb-to-unified.agent.md` | Converting noweb documentation into unified-script sources and rendered docs. | Must run `analyze-noweb-project` first. Stop if file inventory, chapter order, cross-file references, build wiring, or promotion facts are missing. |
-| `release-dk-project-graph` | `agents/release-dk-project-graph.agent.md` | Releasing a GitHub owner's dk repositories in dependency order. | Must run `analyze-dk-project` for each candidate repo and verify `gh` first. Stop on missing owner, missing dependency/version facts, ambiguous mapping, cycles, dirty temp clones, or unobservable CI. |
+| `release-dk-project-graph` | `agents/release-dk-project-graph.agent.md` | Releasing a GitHub owner's dk repositories in dependency order, using shallow temp clones for analysis and skipping unfinished dk packages. | Must run `analyze-dk-project` for each candidate repo and verify `gh` first. Stop on missing owner, missing dependency facts needed for the graph, ambiguous mapping, cycles, dirty temp clones, or unobservable CI; skip and report repos missing usable version metadata. |
 | `repair-dk-package-github-actions` | `agents/repair-dk-package-github-actions.agent.md` | Diagnosing or repairing a GitHub Actions-based dk package workflow. | Must run `analyze-dk-package-github-actions` first. Stop if workflow, dk-project, release-prefix, or producer-shaping facts are missing. |
 
 ### Skills
 
 | Name | Path | Use when | Required gate / hard stop |
 | --- | --- | --- | --- |
-| `analyze-dk-package-github-actions` | `skills/analyze-dk-package-github-actions/SKILL.md` | Analyzing a dk package repo's workflows, release-prefix derivation, and `gh` validation path. | Stop if root `dk.u`, workflow inventory, `etc/dk/d/*.json`, `dist-*.u/run.u`, trigger mode, or producer-shaping facts cannot be verified. |
-| `analyze-dk-project` | `skills/analyze-dk-project/SKILL.md` | Classifying a repo as a dk project and extracting dependencies, modules, slots, and descriptions. | Stop if root `dk.u`, imports, `dist-*.u/run.u`, module/slot inventory, prose snippets, or values-file inventory cannot be verified. |
+| `analyze-dk-package-github-actions` | `skills/analyze-dk-package-github-actions/SKILL.md` | Analyzing a dk package repo's workflows, release-prefix derivation, unfinished-package state, and `gh` validation path. | Stop if root `dk.u`, workflow inventory, `dist-*.u/run.u`, trigger mode, or producer-shaping facts cannot be verified. Missing or unusable `etc/dk/d/*.json` must be reported as an unfinished dk package. |
+| `analyze-dk-project` | `skills/analyze-dk-project/SKILL.md` | Classifying a repo as a dk project and distinguishing finished vs. unfinished dk packages while extracting dependencies, modules, slots, and descriptions. | Stop if root `dk.u`, imports, `etc/dk/d/*.json` inventory, `dist-*.u/run.u`, module/slot inventory, prose snippets, or values-file inventory cannot be verified. Missing or unusable `etc/dk/d/*.json` must be reported as an unfinished dk package. |
 | `analyze-dune-project` | `skills/analyze-dune-project/SKILL.md` | Analyzing an OCaml dune project before expect-test conversion. | Stop if `dune-project`, library inventory, expect-test file list, or helper-signature facts are missing. |
 | `analyze-noweb-project` | `skills/analyze-noweb-project/SKILL.md` | Analyzing a noweb project's chapters, references, and doc/build wiring before conversion. | Stop if noweb inventory, chapter entrypoints/order, cross-file references, dominant language summary, build wiring, or promotion model are missing. |
 | `make-dk-package-from-autoconf` | `skills/make-dk-package-from-autoconf/SKILL.md` | Creating or extending a dk package for an autoconf-based upstream project, including Windows cross-compilation. | Stop if dk-project classification, `dist-*.u/run.u`, primary package and `.Bundle` modules, autoconf references, toolchain references, or dependent package facts are missing. |
@@ -364,6 +364,7 @@ Before committing a new skill or agent:
 
 - **Purpose**: Analyze dk package projects
 - **Dependencies**: From root `dk.u` `%% import` commands
+- **Release state**: Distinguish finished packages from unfinished ones using `etc/dk/d/*.json`
 - **Modules**: From `dist-*.u/run.u` unified scripts
 - **Commands**: All value shell command types
 - **Descriptions**: From prose or `*.values.{jsonc,lua}`
