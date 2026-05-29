@@ -315,6 +315,39 @@ regions and outages.
 When adapting an existing Unix-only package, keep the Darwin/Linux commands and
 slots intact unless the same refactor is needed to keep the logic consistent.
 
+### Step 3.6 — Avoid intermediate-directory precommands
+
+> [!WARNING]
+> **Intermediate-directory precommands produce permanently stale cached inputs.**
+>
+> When a dk form uses:
+> 1. A precommand that stages an asset to an intermediate file (e.g.,
+>    `get-asset MOD@VER -p path/to/script.py -f script.py`)
+> 2. A function command that copies it (e.g., `coreutils cp "script.py"
+>    "${SLOT.request}/script.py"`)
+> 3. A downstream execution command that uses the copied file (e.g.,
+>    `python3 "script.py"`)
+>
+> Then the `cp` step has only constant bare-string arguments. It is cached
+> forever after its first execution — even after `dk0 update` refreshes asset
+> checksums, and even after `--invalidate` / `-x` cache invalidation. Any
+> downstream execution step that relies on the copied file will also run stale.
+>
+> **Solution:** Use `$(get-asset ... -f BASENAME)` subshells directly in the
+> executing function command instead, making the execution step a direct
+> consumer of the asset task dependency:
+>
+> ```json
+> // CORRECT — subshell creates dependency, re-runs when asset changes:
+> "commands": [
+>   ["python3", "$(get-asset MOD@VER -p path/to/script.py -f script.py)"]
+> ]
+> ```
+
+This pattern ensures that when the asset content changes (and `dk0 update`
+updates its sha256 in `dk.u`), the execution step's dependency digest changes
+and the step re-executes with the fresh asset.
+
 ---
 
 ## Step 4: Update the checked-in distribution script
