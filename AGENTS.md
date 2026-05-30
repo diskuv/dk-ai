@@ -36,6 +36,7 @@ Self-update rule:
 | Name | Path | Use when | Required gate / hard stop |
 | --- | --- | --- | --- |
 | `analyze-dk-package-github-actions` | `skills/analyze-dk-package-github-actions/SKILL.md` | Analyzing a dk package repo's workflows, release-prefix derivation, unfinished-package state, and `gh` validation path. | Stop if root `dk.u`, workflow inventory, `dist-*.u/run.u`, trigger mode, or producer-shaping facts cannot be verified. Missing or unusable `etc/dk/d/*.json` must be reported as an unfinished dk package. |
+| `analyze-dk-package-github-workflow-run` | `skills/analyze-dk-package-github-workflow-run/SKILL.md` | Downloading `patches` artifacts from a dk package workflow run and applying their `.patch` hunks to a local checkout so CI output blocks can be synced locally. | Stop if the checkout root, workflow run id, resolvable repository slug, `patches` artifacts, or `.patch` files cannot be verified. |
 | `analyze-dk-project` | `skills/analyze-dk-project/SKILL.md` | Classifying a repo as a dk project and distinguishing finished vs. unfinished dk packages while extracting dependencies, modules, slots, and descriptions. | Stop if root `dk.u`, imports, `etc/dk/d/*.json` inventory, `dist-*.u/run.u`, module/slot inventory, prose snippets, or values-file inventory cannot be verified. Missing or unusable `etc/dk/d/*.json` must be reported as an unfinished dk package. |
 | `analyze-dune-project` | `skills/analyze-dune-project/SKILL.md` | Analyzing an OCaml dune project before expect-test conversion. | Stop if `dune-project`, library inventory, expect-test file list, or helper-signature facts are missing. |
 | `analyze-noweb-project` | `skills/analyze-noweb-project/SKILL.md` | Analyzing a noweb project's chapters, references, and doc/build wiring before conversion. | Stop if noweb inventory, chapter entrypoints/order, cross-file references, dominant language summary, build wiring, or promotion model are missing. |
@@ -251,6 +252,17 @@ When implementing analysis scripts that inspect project structure:
    - Verify all required data was extracted
    - Do not proceed if critical data is missing
    - Provide clear error messages
+
+### UI-rule project-tree copies
+
+When documenting or implementing dk UI-rule workflows that must copy a generated
+file into the live project source tree:
+
+1. Generate the file in the rule's temp area first.
+2. Use `request.io.realpath(...)` to obtain the host-visible source path.
+3. Use `request.ui.spawn` with a packaged cross-platform tool such as
+   `Coreutils cp` to copy into the strictly-relative project-tree destination.
+4. Do not rely on PowerShell-only copy helpers for this path.
 
 ### Output Format
 
