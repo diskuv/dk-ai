@@ -58,6 +58,13 @@ check_required_sections() {
     else
         printf "${GREEN}✓ Found section: VALUES FILES${NC}\n"
     fi
+
+    if ! grep -q "=== GITHUB RELEASE WORKFLOW DURATION ===" "$file" 2>/dev/null; then
+        printf "${RED}❌ Missing section: GITHUB RELEASE WORKFLOW DURATION${NC}\n"
+        all_found=1
+    else
+        printf "${GREEN}✓ Found section: GITHUB RELEASE WORKFLOW DURATION${NC}\n"
+    fi
     
     if ! grep -q "=== MODULE@VERSION EXTRACTION SUMMARY ===" "$file" 2>/dev/null; then
         printf "${RED}❌ Missing section: MODULE@VERSION EXTRACTION SUMMARY${NC}\n"

@@ -76,6 +76,7 @@ Both outputs should contain:
 4. **DIST-*.U/RUN.U FILES section** listing all unified scripts
 5. **VALUES FILES section** with `*.values.{jsonc,lua}` files
 6. **MODULE@VERSION EXTRACTION SUMMARY** identifying modules and commands used
+7. **GITHUB RELEASE WORKFLOW DURATION** with expected minutes (or explicit unavailable reason)
 
 #### Compare with the test comparison script (Unix)
 
@@ -143,6 +144,7 @@ The skill testing should verify:
 - [ ] Slot names are correctly extracted from `-s` options
 - [ ] Command types (get-object, post-object, etc.) are identified
 - [ ] Descriptions are extracted from surrounding prose
+- [ ] Expected GitHub release workflow duration (or explicit unavailable reason) is reported
 - [ ] UTF-8 encoding is preserved
 - [ ] Path normalization is consistent
 

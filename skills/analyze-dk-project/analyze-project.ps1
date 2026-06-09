@@ -57,6 +57,47 @@ function Get-ValuesSamplerCommand {
     throw 'Neither Node.js nor Python is available for sampling values file outputs.'
 }
 
+function Get-WorkflowSamplerCommand {
+    $jsScript = Join-Path $scriptRoot 'sample-workflow-durations.js'
+    $pyScript = Join-Path $scriptRoot 'sample-workflow-durations.py'
+
+    $node = Get-Command node -ErrorAction SilentlyContinue
+    if ($node -and (Test-Path -Path $jsScript -PathType Leaf)) {
+        return @($node.Source, $jsScript)
+    }
+
+    $python = Get-Command python -ErrorAction SilentlyContinue
+    if ($python -and (Test-Path -Path $pyScript -PathType Leaf)) {
+        return @($python.Source, $pyScript)
+    }
+
+    $pyLauncher = Get-Command py -ErrorAction SilentlyContinue
+    if ($pyLauncher -and (Test-Path -Path $pyScript -PathType Leaf)) {
+        return @($pyLauncher.Source, '-3', $pyScript)
+    }
+
+    throw 'Neither Node.js nor Python is available for workflow-duration summarization.'
+}
+
+function Get-GitHubRepoSlugFromOrigin {
+    $originUrl = (git config --get remote.origin.url 2>$null)
+    if (-not $originUrl) {
+        return $null
+    }
+
+    $m = [Regex]::Match($originUrl, '^https://github\.com/([^/]+)/([^/]+?)(?:\.git)?/?$')
+    if ($m.Success) {
+        return "$($m.Groups[1].Value)/$($m.Groups[2].Value)"
+    }
+
+    $m = [Regex]::Match($originUrl, '^git@github\.com:([^/]+)/([^/]+?)(?:\.git)?$')
+    if ($m.Success) {
+        return "$($m.Groups[1].Value)/$($m.Groups[2].Value)"
+    }
+
+    return $null
+}
+
 function Get-ModuleProseContextFromRunFiles {
     param(
         [string]$Module,
@@ -223,7 +264,82 @@ else {
     Write-Utf8 -Path $absOut -Lines @("(etc/dk/v directory not found)")
 }
 
-# 6. Extract and summarize MODULE@VERSION references from run.u files
+# 6. Capture expected GitHub workflow duration for release-tag runs
+Write-Utf8 -Path $absOut -Lines @("", "=== GITHUB RELEASE WORKFLOW DURATION ===")
+$gh = Get-Command gh -ErrorAction SilentlyContinue
+$repoSlug = Get-GitHubRepoSlugFromOrigin
+if (-not $repoSlug) {
+    Write-Utf8 -Path $absOut -Lines @(
+        'RepoSlug: (unavailable)',
+        'DurationStatus: unavailable',
+        'DurationReason: could not resolve GitHub repo slug from remote.origin.url'
+    )
+}
+elseif (-not $gh) {
+    Write-Utf8 -Path $absOut -Lines @(
+        "RepoSlug: $repoSlug",
+        'DurationStatus: unavailable',
+        'DurationReason: gh CLI not found'
+    )
+}
+else {
+    try {
+        $workflowSamplerCommand = Get-WorkflowSamplerCommand
+        $tmpRuns = Join-Path $env:TEMP "analyze-dk-project-runs-$PID.json"
+        try {
+            & $gh.Source run list --repo $repoSlug --limit 50 --json databaseId,displayTitle,headBranch,workflowName,status,conclusion,event,createdAt,startedAt,updatedAt,url | Set-Content -Path $tmpRuns -Encoding UTF8
+            $summaryOutput = & $workflowSamplerCommand[0] $workflowSamplerCommand[1..($workflowSamplerCommand.Count - 1)] $tmpRuns 5 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                throw ($summaryOutput -join [Environment]::NewLine)
+            }
+
+            Write-Utf8 -Path $absOut -Lines @("RepoSlug: $repoSlug", 'DurationStatus: available')
+            foreach ($line in $summaryOutput) {
+                if ($line -match '^SAMPLE_COUNT=(.+)$') {
+                    Write-Utf8 -Path $absOut -Lines @("SampleCount: $($Matches[1])")
+                    continue
+                }
+                if ($line -match '^EXPECTED_DURATION_MINUTES=(.+)$') {
+                    Write-Utf8 -Path $absOut -Lines @("ExpectedDurationMinutes: $($Matches[1])")
+                    continue
+                }
+                if ($line -match '^MIN_DURATION_MINUTES=(.+)$') {
+                    Write-Utf8 -Path $absOut -Lines @("MinDurationMinutes: $($Matches[1])")
+                    continue
+                }
+                if ($line -match '^MAX_DURATION_MINUTES=(.+)$') {
+                    Write-Utf8 -Path $absOut -Lines @("MaxDurationMinutes: $($Matches[1])")
+                    continue
+                }
+                if ($line -match '^MEDIAN_DURATION_MINUTES=(.+)$') {
+                    Write-Utf8 -Path $absOut -Lines @("MedianDurationMinutes: $($Matches[1])")
+                    continue
+                }
+                if ($line -match '^P80_DURATION_MINUTES=(.+)$') {
+                    Write-Utf8 -Path $absOut -Lines @("P80DurationMinutes: $($Matches[1])")
+                    continue
+                }
+                if ($line -match '^RECENT_RUN=(.+)$') {
+                    Write-Utf8 -Path $absOut -Lines @("RecentRun: $($Matches[1])")
+                }
+            }
+        }
+        finally {
+            if (Test-Path -Path $tmpRuns) {
+                Remove-Item -Path $tmpRuns -Force
+            }
+        }
+    }
+    catch {
+        Write-Utf8 -Path $absOut -Lines @(
+            "RepoSlug: $repoSlug",
+            'DurationStatus: unavailable',
+            "DurationReason: $($_.ToString())"
+        )
+    }
+}
+
+# 7. Extract and summarize MODULE@VERSION references from run.u files
 Write-Utf8 -Path $absOut -Lines @("", "=== MODULE@VERSION EXTRACTION SUMMARY ===")
 $modulesSlots = @{}
 $moduleCommands = @{}

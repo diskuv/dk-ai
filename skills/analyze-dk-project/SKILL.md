@@ -15,6 +15,8 @@ Try to read the following files and directories directly from the workspace:
 4. All `dist-*.u/run.u` files — to extract modules and their slots from dk value shell commands
 5. All `etc/dk/v/*.values.{jsonc,lua}` files — to find descriptions for modules
 6. Any other project metadata files that might contain dependency or module information
+7. GitHub workflow metadata for the repository (using `gh`) to estimate expected
+   duration of successful release-tag workflow runs
 
 Do not ask the user to paste these files.
 
@@ -41,6 +43,8 @@ The script will write the requested output file with:
 - Inventory of `etc/dk/d/*.json` files and their contents
 - All `dist-*.u/run.u` files
 - Sampled output paths (up to 100 per values file) from `etc/dk/v/*.values.{jsonc,lua}`
+- Expected GitHub release workflow duration summary derived from recent successful
+  release-tag runs (or an explicit unavailable reason)
 - Summary of extracted modules, slots, commands, and prose context snippets
 
 Any temporary scratch files should be created in the OS temp directory, not in the repository.
@@ -69,6 +73,12 @@ Required values before continuing:
         - Prose context snippets from `dist-*.u/run.u`
         - Sampled output paths from relevant `*.values.{jsonc,lua}` files (up to 100 paths)
       - Complete inventory of all `*.values.{jsonc,lua}` files
+- [ ] GitHub release workflow duration facts for the repository:
+      - repository slug used for run lookup
+      - expected duration minutes derived from successful release-tag runs
+      - sample size and summary statistics (min/max/median/p80)
+      - if unavailable, explicit reason (`gh` missing, repo slug unavailable,
+       no usable completed release-tag runs, or timestamp parsing failure)
 
 After collecting those values, the skill (LLM) must synthesize a concise module description itself.
 Do not require the helper scripts to compute or infer finalized descriptions.

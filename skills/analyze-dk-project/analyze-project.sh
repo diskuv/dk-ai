@@ -47,9 +47,48 @@ resolve_values_sampler() {
     return 1
 }
 
+resolve_workflow_sampler() {
+    if command -v node >/dev/null 2>&1 && [ -f "$script_dir/sample-workflow-durations.js" ]; then
+        printf 'node\n%s/sample-workflow-durations.js\n' "$script_dir"
+        return 0
+    fi
+
+    if command -v python3 >/dev/null 2>&1 && [ -f "$script_dir/sample-workflow-durations.py" ]; then
+        printf 'python3\n%s/sample-workflow-durations.py\n' "$script_dir"
+        return 0
+    fi
+
+    if command -v python >/dev/null 2>&1 && [ -f "$script_dir/sample-workflow-durations.py" ]; then
+        printf 'python\n%s/sample-workflow-durations.py\n' "$script_dir"
+        return 0
+    fi
+
+    return 1
+}
+
+get_github_repo_slug() {
+    origin_url=$(git config --get remote.origin.url 2>/dev/null || true)
+    if [ -z "$origin_url" ]; then
+        return 1
+    fi
+
+    slug=$(printf '%s' "$origin_url" | sed -n 's#^https://github\.com/\([^/][^/]*\)/\([^/][^/]*\)\(\.git\)\{0,1\}/\{0,1\}$#\1/\2#p')
+    if [ -z "$slug" ]; then
+        slug=$(printf '%s' "$origin_url" | sed -n 's#^git@github\.com:\([^/][^/]*\)/\([^/][^/]*\)\(\.git\)\{0,1\}$#\1/\2#p')
+    fi
+    if [ -z "$slug" ]; then
+        return 1
+    fi
+
+    printf '%s\n' "$slug"
+}
+
 sampler_info=$(resolve_values_sampler || true)
 sampler_command=$(printf '%s' "$sampler_info" | sed -n '1p')
 sampler_script=$(printf '%s' "$sampler_info" | sed -n '2p')
+workflow_sampler_info=$(resolve_workflow_sampler || true)
+workflow_sampler_command=$(printf '%s' "$workflow_sampler_info" | sed -n '1p')
+workflow_sampler_script=$(printf '%s' "$workflow_sampler_info" | sed -n '2p')
 
 # 1. Detect whether this is a dk project via root dk.u
 printf '=== DK PROJECT DETECTION ===\n' >> "$out_file"
@@ -137,7 +176,66 @@ else
     printf '(etc/dk/v directory not found)\n' >> "$out_file"
 fi
 
-# 6. Extract and summarize MODULE@VERSION references from run.u files
+# 6. Capture expected GitHub workflow duration for release-tag runs
+append_section "GITHUB RELEASE WORKFLOW DURATION"
+repo_slug=$(get_github_repo_slug || true)
+if [ -z "$repo_slug" ]; then
+    printf 'RepoSlug: (unavailable)\n' >> "$out_file"
+    printf 'DurationStatus: unavailable\n' >> "$out_file"
+    printf 'DurationReason: could not resolve GitHub repo slug from remote.origin.url\n' >> "$out_file"
+elif ! command -v gh >/dev/null 2>&1; then
+    printf 'RepoSlug: %s\n' "$repo_slug" >> "$out_file"
+    printf 'DurationStatus: unavailable\n' >> "$out_file"
+    printf 'DurationReason: gh CLI not found\n' >> "$out_file"
+elif [ -z "$workflow_sampler_command" ] || [ -z "$workflow_sampler_script" ]; then
+    printf 'RepoSlug: %s\n' "$repo_slug" >> "$out_file"
+    printf 'DurationStatus: unavailable\n' >> "$out_file"
+    printf 'DurationReason: neither Node.js nor Python is available for workflow-duration summarization\n' >> "$out_file"
+else
+    if gh run list --repo "$repo_slug" --limit 50 --json databaseId,displayTitle,headBranch,workflowName,status,conclusion,event,createdAt,startedAt,updatedAt,url > "$temp_dir/workflow-runs.json" 2> "$temp_dir/workflow-runs.err"; then
+        if "$workflow_sampler_command" "$workflow_sampler_script" "$temp_dir/workflow-runs.json" 5 > "$temp_dir/workflow-summary.txt" 2> "$temp_dir/workflow-summary.err"; then
+            printf 'RepoSlug: %s\n' "$repo_slug" >> "$out_file"
+            printf 'DurationStatus: available\n' >> "$out_file"
+            while IFS= read -r line; do
+                case "$line" in
+                    SAMPLE_COUNT=*)
+                        printf 'SampleCount: %s\n' "${line#SAMPLE_COUNT=}" >> "$out_file"
+                        ;;
+                    EXPECTED_DURATION_MINUTES=*)
+                        printf 'ExpectedDurationMinutes: %s\n' "${line#EXPECTED_DURATION_MINUTES=}" >> "$out_file"
+                        ;;
+                    MIN_DURATION_MINUTES=*)
+                        printf 'MinDurationMinutes: %s\n' "${line#MIN_DURATION_MINUTES=}" >> "$out_file"
+                        ;;
+                    MAX_DURATION_MINUTES=*)
+                        printf 'MaxDurationMinutes: %s\n' "${line#MAX_DURATION_MINUTES=}" >> "$out_file"
+                        ;;
+                    MEDIAN_DURATION_MINUTES=*)
+                        printf 'MedianDurationMinutes: %s\n' "${line#MEDIAN_DURATION_MINUTES=}" >> "$out_file"
+                        ;;
+                    P80_DURATION_MINUTES=*)
+                        printf 'P80DurationMinutes: %s\n' "${line#P80_DURATION_MINUTES=}" >> "$out_file"
+                        ;;
+                    RECENT_RUN=*)
+                        printf 'RecentRun: %s\n' "${line#RECENT_RUN=}" >> "$out_file"
+                        ;;
+                esac
+            done < "$temp_dir/workflow-summary.txt"
+        else
+            err_text=$(tr '\n' ' ' < "$temp_dir/workflow-summary.err")
+            printf 'RepoSlug: %s\n' "$repo_slug" >> "$out_file"
+            printf 'DurationStatus: unavailable\n' >> "$out_file"
+            printf 'DurationReason: helper failure%s%s\n' "${err_text:+ - }" "$err_text" >> "$out_file"
+        fi
+    else
+        err_text=$(tr '\n' ' ' < "$temp_dir/workflow-runs.err")
+        printf 'RepoSlug: %s\n' "$repo_slug" >> "$out_file"
+        printf 'DurationStatus: unavailable\n' >> "$out_file"
+        printf 'DurationReason: gh run list failed%s%s\n' "${err_text:+ - }" "$err_text" >> "$out_file"
+    fi
+fi
+
+# 7. Extract and summarize MODULE@VERSION references from run.u files
 append_section "MODULE@VERSION EXTRACTION SUMMARY"
 
 # Create a combined file of all run.u content for analysis

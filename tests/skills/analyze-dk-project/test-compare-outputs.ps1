@@ -42,6 +42,7 @@ function Test-RequiredSections {
         '=== DIST VERSION FILES \(etc/dk/d/\*\.json\) ===',
         '=== DIST-\*\.U/RUN\.U FILES ===',
         '=== VALUES FILES \(etc/dk/v/\*\.values\.\*\) ===',
+        '=== GITHUB RELEASE WORKFLOW DURATION ===',
         '=== MODULE@VERSION EXTRACTION SUMMARY ==='
     )
 

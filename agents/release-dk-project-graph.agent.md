@@ -49,6 +49,8 @@ Required facts before continuing:
   owned by the requested GitHub owner
 - the largest `major.minor` version found in `etc/dk/d/*.json` for each finished
   repo that will actually be released
+- per-repository expected workflow duration minutes (from `analyze-dk-project`'s
+  GitHub release workflow duration summary), or an explicit unavailable reason
 
 If any repository is missing the facts required to place it in the dependency
 graph, stop and report the exact missing repo/file/fact. Do not guess.
@@ -241,15 +243,25 @@ For each repository in order:
    ```
 
    Surface the workflow URL explicitly so the user can open it in the browser.
-10. Pause only after the user can observe the workflow either through displayed
+10. While waiting for completion, report progress using elapsed time versus expected
+    time from `analyze-dk-project` whenever expected minutes are available.
+    For example:
+
+    ```text
+    CommonsBase_GNU: 37m / 84m expected
+    ```
+
+    If expected time is unavailable for that repository, report elapsed time and the
+    explicit reason from the skill output.
+11. Pause only after the user can observe the workflow either through displayed
     logs or the provided workflow link.
-11. Do not begin the next repository until the current repository's matched
+12. Do not begin the next repository until the current repository's matched
     workflow run has finished. Wait for a terminal conclusion for the current
     repository before asking whether to continue.
-12. If the matched workflow run fails, is cancelled, or cannot be found
+13. If the matched workflow run fails, is cancelled, or cannot be found
     unambiguously, stop and tell the user which `start_package` value to use for
     retry.
-13. If the user declines to continue after the current workflow has finished,
+14. If the user declines to continue after the current workflow has finished,
     abort and tell them which `start_package` value to use for retry.
 
 Execution reliability rules for this step:
