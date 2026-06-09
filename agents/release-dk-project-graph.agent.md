@@ -252,6 +252,18 @@ For each repository in order:
 13. If the user declines to continue after the current workflow has finished,
     abort and tell them which `start_package` value to use for retry.
 
+Execution reliability rules for this step:
+
+- Do not release the full graph in one giant shell loop.
+- Execute one repository at a time and checkpoint the result before moving on.
+- After each repository, persist and report the triplet:
+  - repository name
+  - created tag
+  - matched workflow URL
+- Keep command output small enough to remain observable:
+  - prefer quiet clone/fetch options where available
+  - avoid command wrappers that echo huge scripts or duplicate progress output
+
 Use non-interactive git commands. Do not use destructive resets or silent
 fallbacks.
 
@@ -276,6 +288,8 @@ After the final repository is released, remind the user to:
 - Never hardcode `2.5`.
 - Never hide workflow observability from the user: either show logs with `gh` or
   give the workflow URL obtained through `gh`.
+- Never execute all repository releases in a single monolithic shell command;
+  always use per-repository checkpoints.
 - Keep temporary clones isolated from unrelated worktrees.
 - Prefer shallow temp clones/fetches for the analysis workspace unless a
   verified release step requires deeper history.
