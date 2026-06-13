@@ -39,6 +39,16 @@ scripts from the skill instead of guessing.
 2. Identify the active GitHub Actions workflow file from repository evidence.
 3. Derive the release tag prefix from `etc/dk/d/*.json`; do not hardcode `2.5`.
 
+### Step 1.1 — Ask where to apply patches
+
+If the user has not already named the checkout or temporary directory where
+patches should be applied, ask before editing anything. Accept either:
+
+1. a temporary work directory, or
+2. an existing checked-out repository path.
+
+Do not guess the destination.
+
 ### Step 2: Make the smallest repository-native CI fix
 
 When repairing a workflow:
@@ -48,6 +58,8 @@ When repairing a workflow:
 2. prefer minimal changes to the existing workflow over replacing it wholesale
 3. keep per-platform distribution jobs and `combine` semantics aligned with the
    checked-in repository design
+4. download the `patches` artifact for the run and apply it to the chosen
+   checkout before making any further edits
 
 ### Step 3: Validate the fix through the repository's real release path
 
