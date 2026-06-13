@@ -94,10 +94,11 @@ If you add or change reusable local assets declared in `dk.u`:
 Do this **before** trying to consume those assets. Newly declared `dk.u` assets
 are not immediately visible until the update step has refreshed the generated state.
 
-If you add or generate reusable bundled text assets such as `.sh`, `.cmd`,
+If you add or generate reusable bundled text assets such as `.sh`,
 `.awk`, Markdown, or extensionless helper scripts:
 
-1. Write them with **LF** line endings, not CRLF.
+1. Write them with **LF** line endings, not CRLF. However `.cmd` and `.bat` files
+   must have CRLF line endings.
 2. Ensure the repository has `.gitattributes` guidance for every bundled text
    asset type so checkout conversion does not change dk asset checksums across
    platforms.

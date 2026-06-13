@@ -74,10 +74,11 @@ pin it to LF in `.gitattributes` before trusting the recorded metadata.
 Common cases:
 
 - `*.sh`
-- `*.cmd`
 - `*.awk`
 - `*.md` when Markdown is bundled as an asset
 - extensionless helper scripts or shims
+
+`.cmd` and `.bat` files must have CRLF line endings.
 
 This matters especially on Windows. CRLF checkout conversion changes both the
 bundle checksum and the recorded size.
