@@ -1,5 +1,5 @@
 ---
-name: analyze-dk-package-github-actions
+name: analyze-dk-package-distribution
 description: Analyze a GitHub Actions-based dk package repository for tag-driven distribution workflows, combine/producer risks, and gh-based validation paths.
 ---
 
@@ -25,13 +25,13 @@ you MUST stop and run [analyze-project.ps1](analyze-project.ps1) in PowerShell
 on Windows from the project root:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File {path_to_analyze_dk_package_github_actions_skill}\analyze-project.ps1 -OutFile "$env:TEMP\analyze-dk-package-github-actions.txt"
+powershell -ExecutionPolicy Bypass -File {path_to_analyze_dk_package_distribution_skill}\analyze-project.ps1 -OutFile "$env:TEMP\analyze-dk-package-distribution.txt"
 ```
 
 or on Unix run [analyze-project.sh](analyze-project.sh):
 
 ```bash
-sh {path_to_analyze_dk_package_github_actions_skill}/analyze-project.sh "${TMPDIR:-/tmp}/analyze-dk-package-github-actions.txt"
+sh {path_to_analyze_dk_package_distribution_skill}/analyze-project.sh "${TMPDIR:-/tmp}/analyze-dk-package-distribution.txt"
 ```
 
 The script will write the requested output file with:

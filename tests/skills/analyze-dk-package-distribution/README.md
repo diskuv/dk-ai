@@ -1,7 +1,7 @@
-# Testing the analyze-dk-package-github-actions Skill
+# Testing the analyze-dk-package-distribution Skill
 
 This document explains how to test the
-`analyze-dk-package-github-actions` skill and its helper scripts across
+`analyze-dk-package-distribution` skill and its helper scripts across
 PowerShell and POSIX shell environments.
 
 ## Overview
@@ -39,9 +39,9 @@ Use `CommonsBase_FileMagic` or another dk package repository that has:
 ### Step 1: Run the PowerShell helper
 
 ```powershell
-$skillPath = "path\to\dk-ai\skills\analyze-dk-package-github-actions"
+$skillPath = "path\to\dk-ai\skills\analyze-dk-package-distribution"
 $repoPath = "path\to\CommonsBase_FileMagic"
-$outFile = Join-Path $env:TEMP 'analyze-dk-package-github-actions-ps1.txt'
+$outFile = Join-Path $env:TEMP 'analyze-dk-package-distribution-ps1.txt'
 
 Set-Location $repoPath
 powershell -ExecutionPolicy Bypass -File "$skillPath\analyze-project.ps1" -OutFile $outFile
@@ -53,10 +53,10 @@ Write-Host "PowerShell output: $outFile"
 On Windows, prefer Git Bash. On Unix, any POSIX shell is fine.
 
 ```powershell
-$skillPath = "path\to\dk-ai\skills\analyze-dk-package-github-actions"
+$skillPath = "path\to\dk-ai\skills\analyze-dk-package-distribution"
 $repoPath = "path\to\CommonsBase_FileMagic"
 $bashPath = "C:\Program Files\Git\bin\bash.exe"
-$outFile = Join-Path $env:TEMP 'analyze-dk-package-github-actions-sh.txt'
+$outFile = Join-Path $env:TEMP 'analyze-dk-package-distribution-sh.txt'
 
 $skillPathBash = ($skillPath -replace '^([a-zA-Z]):', '/''$1') -replace '\\', '/'
 $repoPathBash = ($repoPath -replace '^([a-zA-Z]):', '/''$1') -replace '\\', '/'
@@ -71,9 +71,9 @@ Write-Host "Shell output: $outFile"
 **Windows PowerShell**
 
 ```powershell
-$testDir = "path\to\dk-ai\tests\skills\analyze-dk-package-github-actions"
-$psOutput = Join-Path $env:TEMP 'analyze-dk-package-github-actions-ps1.txt'
-$shOutput = Join-Path $env:TEMP 'analyze-dk-package-github-actions-sh.txt'
+$testDir = "path\to\dk-ai\tests\skills\analyze-dk-package-distribution"
+$psOutput = Join-Path $env:TEMP 'analyze-dk-package-distribution-ps1.txt'
+$shOutput = Join-Path $env:TEMP 'analyze-dk-package-distribution-sh.txt'
 
 & "$testDir\test-compare-outputs.ps1" `
     -PowerShellOutput $psOutput `
@@ -83,10 +83,10 @@ $shOutput = Join-Path $env:TEMP 'analyze-dk-package-github-actions-sh.txt'
 **Unix/Linux**
 
 ```bash
-testDir="path/to/dk-ai/tests/skills/analyze-dk-package-github-actions"
+testDir="path/to/dk-ai/tests/skills/analyze-dk-package-distribution"
 bash "$testDir/test-compare-outputs.sh" \
-    "/tmp/analyze-dk-package-github-actions-ps1.txt" \
-    "/tmp/analyze-dk-package-github-actions-sh.txt"
+    "/tmp/analyze-dk-package-distribution-ps1.txt" \
+    "/tmp/analyze-dk-package-distribution-sh.txt"
 ```
 
 ## Expected content

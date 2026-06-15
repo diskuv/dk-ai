@@ -63,10 +63,10 @@ if [ "$root_file_count" -eq 0 ]; then
 fi
 
 append_section "GITHUB ACTIONS WORKFLOWS"
-workflow_list=$(mktemp "${TMPDIR:-/tmp}/analyze-dk-package-github-actions.workflows.XXXXXX")
-dist_json_list=$(mktemp "${TMPDIR:-/tmp}/analyze-dk-package-github-actions.distjson.XXXXXX")
-dist_run_list=$(mktemp "${TMPDIR:-/tmp}/analyze-dk-package-github-actions.distrun.XXXXXX")
-highlights_file=$(mktemp "${TMPDIR:-/tmp}/analyze-dk-package-github-actions.highlights.XXXXXX")
+workflow_list=$(mktemp "${TMPDIR:-/tmp}/analyze-dk-package-distribution.workflows.XXXXXX")
+dist_json_list=$(mktemp "${TMPDIR:-/tmp}/analyze-dk-package-distribution.distjson.XXXXXX")
+dist_run_list=$(mktemp "${TMPDIR:-/tmp}/analyze-dk-package-distribution.distrun.XXXXXX")
+highlights_file=$(mktemp "${TMPDIR:-/tmp}/analyze-dk-package-distribution.highlights.XXXXXX")
 trap 'rm -f "$workflow_list" "$dist_json_list" "$dist_run_list" "$highlights_file"' EXIT HUP INT TERM
 
 if [ -d ".github/workflows" ]; then

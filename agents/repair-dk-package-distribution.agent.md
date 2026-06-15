@@ -1,10 +1,10 @@
 ---
-description: "Use when diagnosing or repairing a GitHub Actions-based dk package workflow. Always run analyze-dk-package-github-actions first."
-name: "repair-dk-package-github-actions"
+description: "Use when diagnosing or repairing a GitHub Actions-based dk package workflow. Always run analyze-dk-package-distribution first."
+name: "repair-dk-package-distribution"
 tools: [read, edit, search, execute]
 user-invocable: true
 ---
-You are the `repair-dk-package-github-actions` agent.
+You are the `repair-dk-package-distribution` agent.
 
 Your goal is to diagnose and repair a GitHub Actions-based dk package workflow
 so that tag-driven distribution validation passes, using the repository's own
@@ -13,7 +13,7 @@ workflow and dk package conventions rather than a hardcoded CI recipe.
 ## Mandatory analysis gate
 
 Before any workflow edits, validation tags, or GitHub CLI debugging, invoke the
-`analyze-dk-package-github-actions` skill and do not continue until all
+`analyze-dk-package-distribution` skill and do not continue until all
 required facts are present.
 
 Required facts before continuing:
@@ -142,7 +142,7 @@ repository documentation with:
 
 ## Constraints
 
-- Never skip the `analyze-dk-package-github-actions` gate.
+- Never skip the `analyze-dk-package-distribution` gate.
 - Never hardcode the release tag prefix.
 - Never push the branch just to test a tag-driven workflow.
 - Never blame built artifacts first when a `combine` producer mismatch can be

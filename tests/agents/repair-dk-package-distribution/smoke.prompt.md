@@ -1,16 +1,16 @@
 ---
 agent: ask
-description: "Smoke test the repair-dk-package-github-actions agent for analysis-first GitHub Actions dk-package debugging"
+description: "Smoke test the repair-dk-package-distribution agent for analysis-first GitHub Actions dk-package debugging"
 ---
-Validate that the `repair-dk-package-github-actions` agent enforces analysis
+Validate that the `repair-dk-package-distribution` agent enforces analysis
 before workflow edits and stays generic across GitHub Actions-based dk package
 repositories.
 
 ## Test Setup
 
 - Repository under test: current workspace
-- Target agent: `repair-dk-package-github-actions`
-- Required dependency: `analyze-dk-package-github-actions` skill
+- Target agent: `repair-dk-package-distribution`
+- Required dependency: `analyze-dk-package-distribution` skill
 
 ## Prompt to Run
 
@@ -24,7 +24,7 @@ validation passes."
 Pass only if all are true:
 
 1. The agent starts by running project analysis or delegating to
-   `analyze-dk-package-github-actions`.
+   `analyze-dk-package-distribution`.
 2. The agent requires concrete workflow facts before suggesting fixes:
    - workflow inventory
    - `dist-*.u/run.u` inventory
@@ -51,6 +51,6 @@ Fail if any are observed:
 ## Evidence to Capture
 
 - the first 5-10 actionable steps reported by the agent
-- any explicit references to `analyze-dk-package-github-actions`
+- any explicit references to `analyze-dk-package-distribution`
 - the exact validation path the agent proposes for tag-driven CI
 - the first diagnosis step it proposes for a `combine` producer mismatch

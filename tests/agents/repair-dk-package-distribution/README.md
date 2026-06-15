@@ -1,7 +1,7 @@
-# Testing the repair-dk-package-github-actions Agent
+# Testing the repair-dk-package-distribution Agent
 
 This directory contains smoke-test guidance for the
-`repair-dk-package-github-actions` agent.
+`repair-dk-package-distribution` agent.
 
 The goal is to verify that the agent can repeat the common dk-package GitHub
 Actions debugging loop:
@@ -18,7 +18,7 @@ Actions debugging loop:
    `etc/dk/d/*.json`, and `dist-*.u/run.u`.
 2. Run the prompt in [`smoke.prompt.md`](./smoke.prompt.md).
 3. Inspect whether the agent starts with the
-   `analyze-dk-package-github-actions` gate.
+   `analyze-dk-package-distribution` gate.
 
 ## Detailed Test Procedure
 
@@ -27,7 +27,7 @@ Actions debugging loop:
 Run the prompt in [`smoke.prompt.md`](./smoke.prompt.md).
 
 Pass only if the agent invokes or explicitly depends on
-`analyze-dk-package-github-actions` before suggesting workflow edits, commits,
+`analyze-dk-package-distribution` before suggesting workflow edits, commits,
 or tags.
 
 ### Step 2: GitHub CLI preflight and observability
@@ -76,7 +76,7 @@ workflow-policy or allowed-action issue rather than a dk package build failure.
 
 The agent should show evidence of:
 
-- a mandatory `analyze-dk-package-github-actions` gate
+- a mandatory `analyze-dk-package-distribution` gate
 - `gh`-based run discovery and observation
 - tag-prefix derivation from `etc/dk/d/*.json` rather than a hardcoded `2.5`
 - tag-only validation guidance for tag-driven workflows
