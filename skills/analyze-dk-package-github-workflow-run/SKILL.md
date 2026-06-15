@@ -19,34 +19,47 @@ Do not ask the user to paste these files if the workspace can be read directly.
 
 ### Step 1.2 — Fallback: run `analyze-project.ps1`
 
-If the checkout root cannot be read directly, or if the workflow run needs to be resolved from the repository remote, run the helper script from the checkout root:
+If the checkout root cannot be read directly, or if the workflow run needs to be resolved from the repository remote, run the helper script from the checkout root.
+
+Identify the run either by an explicit run id, or by a workflow name/file/id whose **latest run** should be used.
 
 **Windows PowerShell**
 
 ```powershell
+# Explicit run id
 powershell -ExecutionPolicy Bypass -File {path_to_skill}\analyze-project.ps1 -RunId <run-id> -CheckoutPath <checkout-path>
+
+# Latest run of a named workflow
+powershell -ExecutionPolicy Bypass -File {path_to_skill}\analyze-project.ps1 -Workflow <workflow.yml> -CheckoutPath <checkout-path>
 ```
 
 **Unix/Linux/macOS**
 
 ```bash
-sh {path_to_skill}/analyze-project.sh <run-id> <checkout-path>
+# Explicit run id
+sh {path_to_skill}/analyze-project.sh --run-id <run-id> --checkout <checkout-path>
+
+# Latest run of a named workflow
+sh {path_to_skill}/analyze-project.sh --workflow <workflow.yml> --checkout <checkout-path>
 ```
+
+Supply exactly one of the run id or the workflow name.
 
 The helper will:
 
 1. resolve the repository slug from the checkout remote if needed
-2. download every workflow artifact named `patches`
-3. extract the `.patch` files
-4. apply the patches to the checkout
-5. ignore hunks that are already present in the checkout
+2. resolve the latest run id for the named workflow when `-Workflow` / `--workflow` is used
+3. download every workflow artifact named `patches`
+4. extract the `.patch` files
+5. apply the patches to the checkout
+6. ignore hunks that are already present in the checkout
 
 ### Step 1.3 — Hard stop rule
 
 If, after Step 1.1 and Step 1.2, you still do not have **all** of the following concrete values, stop and ask the user for the missing value:
 
 - [ ] Local checkout path
-- [ ] Workflow run id
+- [ ] Workflow run id, or a workflow name/file/id whose latest run resolves to a run id
 - [ ] Repository slug or a resolvable GitHub remote for the checkout
 - [ ] At least one `patches` artifact in the workflow run
 - [ ] At least one `.patch` file inside the extracted artifacts

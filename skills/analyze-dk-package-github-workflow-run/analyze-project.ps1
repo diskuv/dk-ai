@@ -1,6 +1,7 @@
 param(
-    [Parameter(Mandatory = $true)]
     [string]$RunId,
+
+    [string]$Workflow,
 
     [Parameter(Mandatory = $true)]
     [string]$CheckoutPath,
@@ -72,6 +73,24 @@ if ($repoParts.Count -ne 2) {
 $owner = $repoParts[0]
 $repoName = $repoParts[1]
 
+$hasRunId = -not [string]::IsNullOrWhiteSpace($RunId)
+$hasWorkflow = -not [string]::IsNullOrWhiteSpace($Workflow)
+if ($hasRunId -and $hasWorkflow) {
+    throw "Supply only one of -RunId or -Workflow, not both."
+}
+if (-not $hasRunId -and -not $hasWorkflow) {
+    throw "Supply -RunId for a specific run, or -Workflow to use that workflow's latest run."
+}
+
+$resolvedLatest = $false
+if ($hasWorkflow) {
+    $RunId = Invoke-NativeChecked -Description "gh run list for workflow $Workflow" -Command { gh run list --repo $repoSlug --workflow $Workflow --limit 1 --json databaseId --jq '.[0].databaseId' }
+    if ([string]::IsNullOrWhiteSpace($RunId)) {
+        throw "No runs found for workflow '$Workflow' in $repoSlug."
+    }
+    $resolvedLatest = $true
+}
+
 $workflowIdQuery = '.workflow_id'
 $workflowId = Invoke-NativeChecked -Description "gh api workflow run details" -Command { gh api "repos/$repoSlug/actions/runs/$RunId" --jq $workflowIdQuery }
 if ([string]::IsNullOrWhiteSpace($workflowId)) {
@@ -81,6 +100,10 @@ if ([string]::IsNullOrWhiteSpace($workflowId)) {
 Write-Output 'GitHub workflow run:'
 Write-Output "- owner: $owner"
 Write-Output "- repository: $repoName"
+if ($resolvedLatest) {
+    Write-Output "- workflow: $Workflow"
+    Write-Output "- run selection: latest run of workflow"
+}
 Write-Output "- workflow id: $workflowId"
 Write-Output "- run id: $RunId"
 

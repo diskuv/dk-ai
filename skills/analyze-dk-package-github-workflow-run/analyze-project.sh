@@ -1,14 +1,56 @@
 #!/bin/sh
 set -eu
 
-if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
-    echo "usage: $0 RUN_ID CHECKOUT_PATH [REPOSITORY]" >&2
+usage() {
+    echo "usage: $0 [--run-id RUN_ID] [--workflow WORKFLOW] --checkout CHECKOUT_PATH [--repository REPOSITORY]" >&2
+    echo "       $0 RUN_ID CHECKOUT_PATH [REPOSITORY]   (positional back-compat)" >&2
+    exit 2
+}
+
+run_id=
+workflow=
+checkout=
+repo=
+positional=
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+        --run-id) run_id=$2; shift 2 ;;
+        --workflow) workflow=$2; shift 2 ;;
+        --checkout) checkout=$2; shift 2 ;;
+        --repository) repo=$2; shift 2 ;;
+        --) shift; break ;;
+        -*) echo "unknown option: $1" >&2; usage ;;
+        *) positional="$positional $1"; shift ;;
+    esac
+done
+
+# Positional back-compat: RUN_ID CHECKOUT_PATH [REPOSITORY]
+if [ -n "$positional" ]; then
+    # shellcheck disable=SC2086
+    set -- $positional
+    if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
+        usage
+    fi
+    [ -n "$run_id" ] || run_id=$1
+    [ -n "$checkout" ] || checkout=$2
+    [ -n "$repo" ] || repo=${3:-}
+fi
+
+if [ -z "$checkout" ]; then
+    echo "checkout path is required (--checkout CHECKOUT_PATH)" >&2
     exit 2
 fi
 
-run_id=$1
-checkout=$2
-repo=${3:-}
+if [ -n "$run_id" ] && [ -n "$workflow" ]; then
+    echo "supply only one of --run-id or --workflow, not both" >&2
+    exit 2
+fi
+if [ -z "$run_id" ] && [ -z "$workflow" ]; then
+    echo "supply --run-id for a specific run, or --workflow to use that workflow's latest run" >&2
+    exit 2
+fi
+
 script_root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 helper=$script_root/apply-workflow-patches.js
 
@@ -61,6 +103,16 @@ case "$repo" in
         ;;
 esac
 
+resolved_latest=0
+if [ -n "$workflow" ]; then
+    run_id=$(gh run list --repo "$repo" --workflow "$workflow" --limit 1 --json databaseId --jq '.[0].databaseId')
+    if [ -z "$run_id" ]; then
+        echo "no runs found for workflow '$workflow' in $repo" >&2
+        exit 1
+    fi
+    resolved_latest=1
+fi
+
 workflow_id=$(gh api "repos/$repo/actions/runs/$run_id" --jq '.workflow_id')
 if [ -z "$workflow_id" ]; then
     echo "could not determine workflow id for run $run_id in $repo" >&2
@@ -70,6 +122,10 @@ fi
 printf '%s\n' 'GitHub workflow run:'
 printf '%s\n' "- owner: $owner"
 printf '%s\n' "- repository: $repo_name"
+if [ "$resolved_latest" -eq 1 ]; then
+    printf '%s\n' "- workflow: $workflow"
+    printf '%s\n' "- run selection: latest run of workflow"
+fi
 printf '%s\n' "- workflow id: $workflow_id"
 printf '%s\n' "- run id: $run_id"
 
