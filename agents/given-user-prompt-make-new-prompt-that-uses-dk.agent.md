@@ -1,6 +1,7 @@
 ---
 description: "Use when turning a non-developer's short software wish into a paste-ready mini-plan that drives their own AI coding agent to build and ship it with dk0."
 name: "given-user-prompt-make-new-prompt-that-uses-dk"
+prompt-id: "2026-06-27-ravenous-octopuses"
 tools: [read, edit, search, execute]
 user-invocable: true
 ---
