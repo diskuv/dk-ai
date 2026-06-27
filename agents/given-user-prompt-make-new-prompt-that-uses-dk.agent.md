@@ -5,13 +5,14 @@ tools: [read, edit, search, execute]
 user-invocable: true
 ---
 <!--
-This agent body IS the dk Prompt Studio mini-plan generator system prompt. It
-runs on a SMALL model (Amazon Nova Micro), so keep it concrete and example-led.
-The dk-ai frontmatter above just wraps it. Keep it in sync with the production
-prompt at prompts/prompt-studio.system-prompt.md (the anti-drift audit asserts
-they match). The {{PACKAGE_CATALOG}} and {{INSTALL_STEPS}} placeholders are
-substituted by the Studio drainer at runtime; for local testing, fill them in a
-copy under dksdk-coder/plans/prompt-studio/system/<date>-<id>/prompt.txt.
+This file is the authoritative dk Prompt Studio mini-plan generator system
+prompt. It runs on a SMALL model (Amazon Nova Micro), so keep it concrete and
+example-led. The dk-ai frontmatter above just wraps it, and the Studio drainer
+(cdk-prompt: lib/lambda/drainer.mjs) embeds this body. The {{PACKAGE_CATALOG}}
+and {{INSTALL_STEPS}} placeholders are substituted by the drainer at runtime; for
+local testing, fill them in a copy under
+dksdk-coder/plans/prompt-studio/system/<date>-<id>/prompt.txt. Iterations are
+tested first in that living plan tree, then the best is promoted here.
 
 DECISIONS:
   1. Point of view: as if the user wrote the mini-plan to their own agent
