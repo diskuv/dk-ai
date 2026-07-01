@@ -142,6 +142,31 @@ Only when **every checkbox** is filled with real, verified data may you proceed.
 ---
 ```
 
+## Content: teach the general technique, not incidentals
+
+A skill or agent must teach the *general, reusable technique*, not dump the
+incidental details of the one exercise that motivated it. Write for the next,
+unrelated project rather than the one you just finished.
+
+- Cut anything specific to a single upstream module, dependency, or bug unless
+  it demonstrates a rule that generalizes. If a detail only mattered for one
+  package, leave it out.
+- When a specific hurdle exposed a durable rule, keep the rule and drop the
+  hurdle. For example, "avoid naming produced executables `install*` /
+  `setup*` / `patch*` so they do not trip Windows' UAC-by-name heuristic"
+  generalizes and stays; the particular build target that first hit it does
+  not.
+- Worked examples are welcome and encouraged. Cite one or two real
+  repositories or lanes as illustrations of a general shape (as
+  `make-dk-package-from-autoconf` cites `CommonsBase_GNU` and
+  `CommonsBase_FileMagic`), but keep them as pointers, not as the substance of
+  the skill.
+- Prefer inlining a small reusable template over copying a task-specific
+  script wholesale. If a copied artifact only fits the original task, describe
+  the pattern instead of shipping the artifact.
+
+---
+
 ## Naming Conventions
 
 ### Agents
