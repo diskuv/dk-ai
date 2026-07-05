@@ -1,0 +1,11 @@
+{
+    "name": "dk-ai",
+    "owner": { "name": "Diskuv" },
+    "plugins": [
+        {
+            "name": "dk-ai",
+            "source": "./",
+            "description": "Reusable dk/dk0 skills and agents: analyze dk/dune/noweb projects, build OCaml tools off DkML, create/port dk packages, repair distributions, and convert tests/docs to unified scripts."
+        }
+    ]
+}

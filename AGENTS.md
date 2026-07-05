@@ -7,6 +7,11 @@ This document defines standards for creating and maintaining custom agents and s
 - **Agents**: Custom agents are specialized subagents that perform complex, multi-step tasks autonomously
 - **Skills**: Reusable, tool-independent procedures that agents and users can invoke
 - Both should follow this project's conventions to ensure consistency and maintainability
+- This repo is also a **Claude Code plugin** (`.claude-plugin/plugin.json` +
+  `marketplace.json`): every `skills/<name>/SKILL.md` and `agents/*.agent.md` is
+  auto-discovered by Claude Code sessions that enable the plugin. `skills/` and
+  `agents/` stay the single authoritative locations — never copy or symlink
+  their content into `.claude/skills/`, `~/.claude/skills/`, or another repo.
 
 ## Available repository skills and agents
 
