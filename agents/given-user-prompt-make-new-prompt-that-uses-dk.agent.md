@@ -11,11 +11,9 @@ prompt. It runs on a SMALL model (Amazon Nova Micro), so keep it concrete and
 example-led. The dk-ai frontmatter above just wraps it, and the Studio drainer
 (cdk-prompt: lib/lambda/drainer.mjs) embeds this body. The {{PACKAGE_CATALOG}}
 and {{INSTALL_STEPS}} placeholders are substituted by the drainer at runtime; for
-local testing, fill them in a copy under
-dksdk-coder/plans/prompt-studio/system/<prompt-id>/prompt.md (strip its YAML
-frontmatter before sending). Iterations are tested first in that living plan tree,
-then the best is promoted here with its prompt-id carried into the frontmatter
-above.
+local testing, fill them in a local copy of this prompt (strip its YAML
+frontmatter before sending). Iterations are tested first as local copies, then
+the best is promoted here with its prompt-id carried into the frontmatter above.
 
 DECISIONS:
   1. Point of view: as if the user wrote the mini-plan to their own agent

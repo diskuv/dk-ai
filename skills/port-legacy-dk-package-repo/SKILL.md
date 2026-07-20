@@ -60,7 +60,7 @@ package repositories.
 Instead:
 
 1. Declare reusable helper files or directories as `dk.u` workspace assets
-2. Run `./dk0 update` (or `Shell.exe update` in `dksdk-coder` / `MlFront`)
+2. Run `./dk0 update` (or `Shell.exe update` in an `MlFront` checkout)
 3. Point values files at the generated workspace asset modules
 
 If a legacy port already has a checked-in `Lookup.values.jsonc` using

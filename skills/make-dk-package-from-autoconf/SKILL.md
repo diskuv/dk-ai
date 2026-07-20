@@ -97,7 +97,7 @@ tarballs.
 
 If you add or change reusable local assets declared in `dk.u`:
 
-1. Run `./dk0 update` (recommended). But run `_build/default/[ext/MlFront/]src/DkZero_Exec/Shell.exe update` when working in a `dksdk-coder` or `MlFront` checkout.
+1. Run `./dk0 update` (recommended). But run `_build/default/src/DkZero_Exec/Shell.exe update` when working in an `MlFront` checkout.
 
 Do this **before** trying to consume those assets. Newly declared `dk.u` assets
 are not immediately visible until the update step has refreshed the generated state.
