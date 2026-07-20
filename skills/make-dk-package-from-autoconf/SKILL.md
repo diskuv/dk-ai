@@ -87,6 +87,14 @@ Typical pattern:
 2. The primary package module converts and extracts the source
 3. The package module builds from those bundle assets
 
+Extract archives with dk0/dk1's native support -- never `unzip`, `7zz`/`7z`, or
+PowerShell archive expansion, and do not stage `CommonsBase_Std.S7z` just to
+unzip. Use `get-asset <bundle@version> -p <asset> [-n <STRIP>] -d DIR` for a zip
+bundle asset, `get-object <module@version> -s SLOT -m ./<file>.zip [-n <STRIP>]
+-d DIR` (or `install-object`/`merge-object` with the same `-m`/`-n`/`-d`) for an
+object whose output is a zip, and `CommonsBase_Std.Extract.F_Untar@0.1.0` for
+tarballs.
+
 If you add or change reusable local assets declared in `dk.u`:
 
 1. Run `./dk0 update` (recommended). But run `_build/default/[ext/MlFront/]src/DkZero_Exec/Shell.exe update` when working in a `dksdk-coder` or `MlFront` checkout.
