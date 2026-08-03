@@ -47,6 +47,7 @@ Self-update rule:
 | `analyze-dune-project` | `skills/analyze-dune-project/SKILL.md` | Analyzing an OCaml dune project before expect-test conversion. | Stop if `dune-project`, library inventory, expect-test file list, or helper-signature facts are missing. |
 | `analyze-noweb-project` | `skills/analyze-noweb-project/SKILL.md` | Analyzing a noweb project's chapters, references, and doc/build wiring before conversion. | Stop if noweb inventory, chapter entrypoints/order, cross-file references, dominant language summary, build wiring, or promotion model are missing. |
 | `build-ocaml-tool-off-dkml` | `skills/build-ocaml-tool-off-dkml/SKILL.md` | Building an OCaml developer tool (for example Dune or Opam) as a dk package off DkML's MSVC OCaml compiler across all slots, including the 32-bit `Windows_x86` / `Linux_x86` ABIs that OCaml 5 (Base) drops. | Choose one vs two per-arch Windows forms by whether the build compiles C. Treat local `dk0 update` / `get-bundle` validation as a first pass; finish with tag-driven CI. Stop and report blockers instead of guessing the build recipe. |
+| `build-with-dkjs` | `skills/build-with-dkjs/SKILL.md` | Building a dk project's JavaScript or web (`js_web`) targets with dkjs, the dk build engine on Node.js (npm `@dkjs/cli`, a `dkjs` command with dk0/dk1 argv and byte-identical output, no native binary). | Use dkjs only for JavaScript/web targets; use the native `dk1` binary for native (C) builds, since dkjs does not generate native code yet. Run dkjs alone against a cache/workspace (Node has no OS locks to coordinate with a concurrent native dk). |
 | `make-dk-package-from-autoconf` | `skills/make-dk-package-from-autoconf/SKILL.md` | Creating or extending a dk package for an autoconf-based upstream project, including Windows cross-compilation and signing the tagged release (backing up the signify keys with a password manager, or optionally YubiKey/age). | Stop if dk-project classification, `dist-*.u/run.u`, primary package and `.Bundle` modules, autoconf references, toolchain references, or dependent package facts are missing. |
 | `port-legacy-dk-package-repo` | `skills/port-legacy-dk-package-repo/SKILL.md` | Porting a legacy dk package tree into a standalone package repository. | Treat local validation as only the first pass; unless the user opts out, finish with tag-driven CI. Stop and report concrete blockers instead of guessing layout or pushing a tag just to see failure. |
 | `simplify-duplicates` | `skills/simplify-duplicates/SKILL.md` | Analyzing a bounded file set for exact and near-duplicate code. | Stop if the exact file set, success commands, or enough code context to enumerate duplicate clusters are missing. |
@@ -169,6 +170,26 @@ unrelated project rather than the one you just finished.
 - Prefer inlining a small reusable template over copying a task-specific
   script wholesale. If a copied artifact only fits the original task, describe
   the pattern instead of shipping the artifact.
+
+---
+
+## A toolchain import carries a skill
+
+Packaging a programming-language toolchain or package manager for the dk ecosystem
+(for example `CommonsLang_Python` = CPython + uv, `CommonsLang_DotNet` = the .NET
+SDK, `CommonsLang_OCaml` = OCaml + opam) must, in the same body of work, **add or
+update a dk-ai skill that builds and ingests projects with that toolchain** —
+materialize the runtime, resolve/lock dependencies, build, and assemble a runnable
+project or dk package. The point is that a later request (a Prompt Studio mini-plan,
+a GitHub `new-package` issue) drives the toolchain from a known-good recipe instead
+of reverse-engineering it.
+
+The skill must capture the **validated** end-to-end path: actually run the runtime,
+create a lock, and build at least one real project — not merely confirm the package
+distributes. A toolchain package is **not done** until that skill exists and its
+lock/build path has been executed at least once. (Confirming `distribute` is green
+is necessary but not sufficient: it proves the runtime materializes, not that the
+`run`/`dialog` UI rules and the lock-then-build ingestion work.)
 
 ---
 
