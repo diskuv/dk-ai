@@ -1,6 +1,6 @@
 ---
 name: make-dk-package-from-autoconf
-description: Create or extend a dk package for an autoconf-based upstream project, including Windows cross-compilation plus guidance for choosing a compact FileMagic-style repo layout or a larger GNU-style layout.
+description: Create or extend a dk package for an autoconf-based upstream project, including Windows cross-compilation plus guidance for choosing a compact FileMagic-style repo layout or a larger GNU-style layout, and signing the tagged release (backing up the signify keys with a password manager, or optionally YubiKey/age for hardware security).
 ---
 
 ## Step 1: Analyze the dk package repository
@@ -421,6 +421,94 @@ been used or clearly queued.
 
 ---
 
+## Step 6: Sign and release the package
+
+A finished dk package is distributed with **signify** signatures. The signing
+keypairs come from `dk0 prepare-version`; a tag-driven release workflow (for
+example `diskuv/dk-distribute`) signs the per-platform artifacts with a secret
+key stored as a GitHub **environment** secret. Set this up once, before the
+first release tag. The technique below is general -- it does not depend on any
+private repository or in-house script.
+
+### Step 6.1 — Generate keys and wire the release
+
+1. Run `dk0 prepare-version --ci github <MAJOR.MINOR>` in the package repo. It
+   generates the version's Ed25519 signify keypair **plus pre-generated
+   continuation keypairs** for future version lines, and writes
+   `etc/dk/d/<VERSION>.dist.json`.
+2. Register **only the current version's** keypair as the two GitHub environment
+   secrets `distribute_<major>_<minor>_pubkey` / `_seckey` (the names
+   `dk-distribute` expects), passing each over stdin -- never on a command line.
+3. Commit `etc/dk/d/<VERSION>.dist.json`, then push a release tag
+   (`<MAJOR.MINOR>.<patch>`, or a `<major>.<minor>.YYYYMMDDHHmm` timestamp tag
+   for a validation run) to trigger the workflow.
+
+### Step 6.2 — Back up the master signing keys
+
+The `prepare-version` output contains secret keys, including continuation keys
+that live **nowhere else** once CI holds only the current version's key. Back up
+the full transcript securely; it is the only copy of the continuation keys, so
+protect it and restrict it to the maintainers who cut releases. Two good options,
+easiest first:
+
+**Option A -- password manager (simplest; best for most people).** Paste the full
+transcript into a secure note in a password manager such as 1Password. It is easy
+to store, easy to recover, needs no extra tooling, and is a perfectly legitimate
+choice. Use this default unless you have a specific reason not to.
+
+**Option B -- `age` encrypted to a hardware key (advanced; only if you own
+YubiKeys and are comfortable with hardware security).** Encrypt the transcript
+with `age` (homepage: https://github.com/FiloSottile/age; spec:
+https://age-encryption.org) to one or more hardware recipients, so a routine
+release stays non-interactive *and* the backup opens only with a device you
+physically hold. Choose this only when that extra operational complexity is worth
+it to you:
+
+1. On each device, generate an age recipient with `age-plugin-yubikey`
+   (https://github.com/str4d/age-plugin-yubikey) -- a PIV identity in a retired
+   slot, `--pin-policy once --touch-policy always`. The private key never leaves
+   the device. Collect the public `age1yubikey1...` strings into a recipients file
+   (one per line).
+2. Keep **at least two** recipients (two YubiKeys, or a YubiKey plus a FIDO2
+   passkey via `age-plugin-fido2-hmac`,
+   https://github.com/olastor/age-plugin-fido2-hmac). Any one recipient can
+   decrypt (redundancy, not a k-of-n quorum), so losing one device does not lock
+   you out.
+3. Capture the transcript to a temporary file and encrypt it:
+   `age -R <recipients-file> -o transcript.age transcript`. age encrypts from the
+   **public** recipient strings alone, so no device need be present -- the release
+   stays fully non-interactive.
+4. Store `transcript.age` in a private location you control (a private repo, or
+   offline media), then shred the plaintext.
+5. To cut a later version line, or to recover after a lost device, decrypt the
+   `.age` with any one hardware key (PIN + touch) and extract the needed
+   continuation keypair for the next `prepare-version` run.
+
+Whichever you choose, the public package repo and CI keep only the current
+version's keypair.
+
+### Step 6.3 — YubiKey PIV setup gotchas (only if you chose Option B)
+
+These are one-time, per device:
+
+1. `age-plugin-yubikey` (through 0.5.x) accepts only a PIV management key that is
+   the factory default **or** a PIN-protected **TDES** key. Newer firmware (5.7+)
+   ships a non-TDES (AES) management key, and a previously-used device may carry a
+   custom one, so a first `--generate` can fail with `size error` or
+   `non-TDES management keys are not supported`. Convert once with
+   `ykman piv access change-management-key -a tdes --protect`; add `-n <known-key>`
+   to keep an offline backup of the management key, or `-m <current>` when the
+   device has a known non-default key. Use `ykman piv reset` only on a PIV you are
+   sure is disposable (it needs no PIN or management key and is irreversible).
+2. Omit `--slot` on `--generate` so the plugin picks the first usable retired slot
+   instead of colliding with an occupied one; age finds the right slot at decrypt
+   time from the recipient string, so it need not be recorded.
+3. YubiKey firmware is not field-upgradable, and firmware below 5.3.0 has no PIV
+   key metadata -- an empty-looking `ykman piv info` cannot prove a slot is
+   keyless. Do not assume a used device's slots are free.
+
+---
+
 ## Output expectations
 
 When done, report:
@@ -430,4 +518,6 @@ When done, report:
 - Which `.Bundle` modules provide the source assets
 - Which checked-in distribution script sections/examples were added or revised
 - How Windows, Linux, and macOS validation was performed
+- Whether release signing was set up (`prepare-version`, the environment
+  secrets, and a hardware-protected backup of the signing transcript)
 - Any blockers or package-specific caveats that still remain
