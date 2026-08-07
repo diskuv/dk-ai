@@ -12,6 +12,14 @@ This document defines standards for creating and maintaining custom agents and s
   auto-discovered by Claude Code sessions that enable the plugin. `skills/` and
   `agents/` stay the single authoritative locations — never copy or symlink
   their content into `.claude/skills/`, `~/.claude/skills/`, or another repo.
+- **This repo is PUBLIC — never reference a private repo from it.** Do not link,
+  cite, or path-reference any private or internal repo (or its files, paths, or
+  internal names) from any dk-ai file. Public dk-ai must stand on its own:
+  **inline** the guidance you need, or cite a **public** source (a `diskuv/dk`
+  repo file or a `raw.githubusercontent.com/diskuv/dk/...` URL). If an
+  engine/authoring doc lives only in a private repo, restate the relevant point
+  here instead of pointing at it. Check any new skill, doc, or agent for private
+  references before committing.
 
 ## Available repository skills and agents
 
@@ -48,6 +56,7 @@ Self-update rule:
 | `analyze-noweb-project` | `skills/analyze-noweb-project/SKILL.md` | Analyzing a noweb project's chapters, references, and doc/build wiring before conversion. | Stop if noweb inventory, chapter entrypoints/order, cross-file references, dominant language summary, build wiring, or promotion model are missing. |
 | `build-ocaml-tool-off-dkml` | `skills/build-ocaml-tool-off-dkml/SKILL.md` | Building an OCaml developer tool (for example Dune or Opam) as a dk package off DkML's MSVC OCaml compiler across all slots, including the 32-bit `Windows_x86` / `Linux_x86` ABIs that OCaml 5 (Base) drops. | Choose one vs two per-arch Windows forms by whether the build compiles C. Treat local `dk0 update` / `get-bundle` validation as a first pass; finish with tag-driven CI. Stop and report blockers instead of guessing the build recipe. |
 | `build-with-dkjs` | `skills/build-with-dkjs/SKILL.md` | Building a dk project's JavaScript or web (`js_web`) targets with dkjs, the dk build engine on Node.js (npm `@dkjs/cli`, a `dkjs` command with dk0/dk1 argv and byte-identical output, no native binary). | Use dkjs only for JavaScript/web targets; use the native `dk1` binary for native (C) builds, since dkjs does not generate native code yet. Run dkjs alone against a cache/workspace (Node has no OS locks to coordinate with a concurrent native dk). |
+| `convert-pypi-to-dk-package` | `skills/convert-pypi-to-dk-package/SKILL.md` | Ingesting a PyPI requirement set into a hermetic dk build with the `CommonsLang_Python` toolchain (bundled CPython + uv): `UvLock.Solve` pins every wheel per slot into `dk-uv-lock.jsonc` via a checked-in uv generator, and `UvBuild.Build` fetches each wheel offline through `get-asset` and `uv`-installs it `--no-index`. | Lock is author-time (network) and per-slot; build is offline/content-addressed. Honor the run/write trust caps and the lua-ml constraints (no `gsub`/local-functions/booleans, `return M`). Validate the Python helpers standalone before the slow dk0 cycle. |
 | `make-dk-package-from-autoconf` | `skills/make-dk-package-from-autoconf/SKILL.md` | Creating or extending a dk package for an autoconf-based upstream project, including Windows cross-compilation and signing the tagged release (backing up the signify keys with a password manager, or optionally YubiKey/age). | Stop if dk-project classification, `dist-*.u/run.u`, primary package and `.Bundle` modules, autoconf references, toolchain references, or dependent package facts are missing. |
 | `port-legacy-dk-package-repo` | `skills/port-legacy-dk-package-repo/SKILL.md` | Porting a legacy dk package tree into a standalone package repository. | Treat local validation as only the first pass; unless the user opts out, finish with tag-driven CI. Stop and report concrete blockers instead of guessing layout or pushing a tag just to see failure. |
 | `simplify-duplicates` | `skills/simplify-duplicates/SKILL.md` | Analyzing a bounded file set for exact and near-duplicate code. | Stop if the exact file set, success commands, or enough code context to enumerate duplicate clusters are missing. |
@@ -190,6 +199,32 @@ distributes. A toolchain package is **not done** until that skill exists and its
 lock/build path has been executed at least once. (Confirming `distribute` is green
 is necessary but not sufficient: it proves the runtime materializes, not that the
 `run`/`dialog` UI rules and the lock-then-build ingestion work.)
+
+---
+
+## Exercise the package's capabilities in its distribution scripts
+
+A dk package's `dist-*.u` / `run.u` should not merely ship its objects — it should
+**invoke the package's own capabilities**: a tool's `--version`, a `run`/`dialog`
+round-trip, a solve/lock-then-build cycle. Each such invocation earns its keep twice:
+
+- **Usage documentation** — the `## <Name>` section plus its recorded output renders
+  as a worked *Usage* example in the generated package docs, so a consumer sees
+  exactly how to drive the package.
+- **Regression test** — the check re-runs on every tagged release (the distribute
+  CI), so a capability that breaks fails the release instead of shipping broken.
+
+So whenever a package exposes a runnable capability (a CLI, or a
+solve/lock/build/ingest flow), add a dist-script section that exercises it end to end
+against a tiny fixture. Test it by `run-function`ing the package's **`F_` function
+rules** — a UI/dialog rule cannot be dist-tested (launching a program needs the
+`run`/`write` trust caps and project files the distribute step does not grant), so its
+heavy logic must live in `F_` function rules that the uirule delegates to. For
+example, `CommonsLang_Python`'s dist scripts should `run-function` its lock + build
+`F_` rules on a trivial requirement (e.g. `six`), which both documents the ingestion
+Usage and regression-tests the lock-then-build path on every release. This complements —
+does not replace — the one-time validation the toolchain skill must perform per the rule
+above.
 
 ---
 
@@ -443,6 +478,15 @@ Before committing a new skill or agent:
 - **Layout choice**: Prefer the FileMagic layout for compact single-package repos with one honest `dist-any.u`; prefer the GNU layout for larger multi-package or split-distribution repos
 - **Validation rule**: Treat local validation as a first pass only; for dk packages, finish with tag-driven CI validation unless the user explicitly says not to
 - **Signing/release**: One-time `dk0 prepare-version` key setup with GitHub environment secrets for `dk-distribute`; back up the signing transcript in a password manager (simplest) or, for hardware security, encrypt it with `age` + `age-plugin-yubikey`
+
+### convert-pypi-to-dk-package
+
+- **Purpose**: Ingest a PyPI requirement set into a hermetic dk build with the `CommonsLang_Python` toolchain (bundled CPython 3.13 + uv)
+- **Model**: Lock-then-build — `UvLock.Solve` resolves once (network) and pins each wheel per slot into `dk-uv-lock.jsonc`; `UvBuild.Build` fetches those wheels offline via `get-asset` and `uv pip install --no-index --offline`
+- **Generator pattern**: The uirule stays thin and captures a checked-in Python generator/helper (real language, `tomllib`/`json`, testable off-dk); the dk0 side is the two-stage `request.ui.capture` pattern shared with `Solve`
+- **uv 0.12 facts**: universal lockfile, no `uv export --python-platform`, `-o` name must be `pylock.toml` (no dots); per-slot wheel selection + Python-tag filtering done in the generator
+- **dk0/lua-ml facts**: `--trust-local-caps run,write`; `capture` not `spawn`; `io.close` every continued object; no `gsub`/local-functions/booleans; `return M`
+- **Validation rule**: Test the Python helpers standalone first (uv-managed 3.13), then local dk0 dialog, then tag CI
 
 ---
 
