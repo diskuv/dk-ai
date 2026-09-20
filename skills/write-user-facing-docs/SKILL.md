@@ -52,9 +52,25 @@ time, never the values" contrasts and goes. "Never redistributed" is the rule
 and stays.
 
 Apply the test to each negative you wrote: if deleting the negative clause
-leaves the sentence carrying everything the reader needs, it was a contrast, so
-delete it. If deleting it removes a promise the reader relies on, it was a
-guarantee, so keep it.
+leaves the sentence carrying everything the reader needs, the clause was a
+contrast. Delete it. If deleting it removes a promise the reader relies on,
+the clause was a guarantee. Keep it.
+
+### Cut a trailing ", so ..." clause
+
+A comma followed by "so" hangs a consequence or a reason onto a statement of
+fact, and it asks the reader to read the first half as the argument for the
+second. State the two facts as two sentences and let the reader hold them
+together:
+
+| Draft | Revision |
+| --- | --- |
+| Three implementations share one build engine, so every one produces the same output. | Three implementations share one build engine. Each produces the same output. |
+| The lock stamps its parameters, so a later solve reuses them. | The lock stamps its parameters. A later solve reuses them. |
+
+Arguing a claim from its cause is a design note's job; a document states what
+is. The check is the literal string ", so ". An intensifier ("so many
+packages") and a "so that" purpose clause read differently and stay.
 
 ## Step 3: Describe the thing, not the version that changed it
 
@@ -78,8 +94,8 @@ Two carve-outs:
 
 - **A version boundary the reader must act on** is a fact of the thing, stated
   as a requirement inside the section that describes the feature: "requires
-  dk 2.4.2.336 or later". It is keyed to the feature, and it names the
-  minimum, so it survives every later release without editing.
+  dk 2.4.2.336 or later". It is keyed to the feature and names the minimum.
+  Every later release leaves it valid without an edit.
 - **Design rationale worth keeping** (why the thing is shaped this way, an
   invariant a maintainer must not break) is attached to the design it
   explains, in present tense. The incident that taught it and the version that
@@ -150,13 +166,13 @@ justified guarantee, or a version requirement keyed to a feature.
 **Windows PowerShell:**
 
 ```powershell
-Select-String -Path DOC.md -Pattern '—|--|, not |, never | rather than |The @[0-9]| revision |Since @|As of |does not mandate|is not required|out of the '
+Select-String -Path DOC.md -Pattern '—|--|, not |, never |, so | rather than |The @[0-9]| revision |Since @|As of |does not mandate|is not required|out of the '
 ```
 
 **Unix/Linux:**
 
 ```sh
-grep -nE '—|--|, not |, never | rather than |The @[0-9]| revision |Since @|As of |does not mandate|is not required|out of the ' DOC.md
+grep -nE '—|--|, not |, never |, so | rather than |The @[0-9]| revision |Since @|As of |does not mandate|is not required|out of the ' DOC.md
 ```
 
 The nominalization check has no useful pattern, because the words that carry it
@@ -167,6 +183,8 @@ Required before the document is done:
 
 - [ ] Every emdash and ASCII stand-in is gone.
 - [ ] Every remaining negative clause passes the guarantee-versus-contrast test.
+- [ ] Every ", so " tail is split into two sentences, unless it is a "so that"
+      purpose clause or an intensifier.
 - [ ] No paragraph is keyed to a version; every version number left is a
       requirement stated inside the section describing its feature.
 - [ ] Each revised sentence still carries what the reader needs on its own.
