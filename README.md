@@ -12,40 +12,46 @@ these skills, so this repository is where that install points.
 
 ## Layout
 
-- `agents/<name>.agent.md` - task agents (see the live inventory in `AGENTS.md`).
-- `skills/<name>/SKILL.md` - reusable skills the agents (and you) invoke.
-- `tests/` - per-agent and per-skill tests.
+The agents and skills live under `.ai-skills/`, so installing the plugin copies only
+that directory, not the whole repository:
+
+- `.ai-skills/<name>/SKILL.md` - reusable skills the agents (and you) invoke.
+- `.ai-skills/agents/<name>.agent.md` - task agents (see the live inventory in `AGENTS.md`).
+- `.ai-skills/.claude-plugin/plugin.json` - the Claude Code plugin manifest.
 - `AGENTS.md` - the authoring conventions and the current inventory of what is here.
 
 ## Install
 
-The files use the Claude agent/skill format (`agents/*.agent.md`,
-`skills/*/SKILL.md`). Exact discovery rules vary by tool and version, so pick the
+The files use the Claude agent/skill format (`.ai-skills/agents/*.agent.md`,
+`.ai-skills/*/SKILL.md`). Exact discovery rules vary by tool and version, so pick the
 closest path below; when in doubt, the "other agents" path always works.
 
 ### Claude Code
 
-Clone the repo and copy its agents and skills where Claude Code looks for them,
-either for one project or for every project:
+This repository is a Claude Code plugin. Add it as a marketplace and install the plugin:
+
+```text
+/plugin marketplace add diskuv/dk-ai
+/plugin install dk-ai@dk-ai
+```
+
+Or clone it and copy the agents and the skills you want where Claude Code looks for them:
 
 ```sh
 git clone https://github.com/diskuv/dk-ai
-# this project only:
 mkdir -p .claude/agents .claude/skills
-cp -r dk-ai/agents/* .claude/agents/
-cp -r dk-ai/skills/* .claude/skills/
-# or for every project (user-wide):
-mkdir -p ~/.claude/agents ~/.claude/skills
-cp -r dk-ai/agents/* ~/.claude/agents/
-cp -r dk-ai/skills/* ~/.claude/skills/
+cp -r dk-ai/.ai-skills/agents/* .claude/agents/
+# each skill is a directory under .ai-skills/; copy the ones you want by name:
+cp -r dk-ai/.ai-skills/analyze-dk-project .claude/skills/
 ```
 
 Reload Claude Code so it discovers them.
 
 ### Claude Desktop / claude.ai
 
-Add each folder under `skills/` through the Skills feature. For an agent, paste the
-body of the relevant `agents/*.agent.md` as your project instructions.
+Add each skill directory under `.ai-skills/` (every subdirectory except `agents/` and
+`.claude-plugin/`) through the Skills feature. For an agent, paste the body of the
+relevant `.ai-skills/agents/*.agent.md` as your project instructions.
 
 ### Cursor, GitHub Copilot, OpenAI, and other agents
 
@@ -55,15 +61,15 @@ your agent to read the skill or agent it needs:
 
 ```sh
 git clone https://github.com/diskuv/dk-ai
-# then tell your agent: "read dk-ai/skills/analyze-dk-project/SKILL.md and follow it"
+# then tell your agent: "read dk-ai/.ai-skills/analyze-dk-project/SKILL.md and follow it"
 ```
 
 If your agent has a web or fetch tool, it can pull a skill into context without
 cloning:
 
 ```text
-https://raw.githubusercontent.com/diskuv/dk-ai/main/skills/<name>/SKILL.md
-https://raw.githubusercontent.com/diskuv/dk-ai/main/agents/<name>.agent.md
+https://raw.githubusercontent.com/diskuv/dk-ai/main/.ai-skills/<name>/SKILL.md
+https://raw.githubusercontent.com/diskuv/dk-ai/main/.ai-skills/agents/<name>.agent.md
 ```
 
 This three-step fallback (install the skills, else fetch them with a web tool, else
