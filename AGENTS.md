@@ -8,9 +8,9 @@ This document defines standards for creating and maintaining custom agents and s
 - **Skills**: Reusable, tool-independent procedures that agents and users can invoke
 - Both should follow this project's conventions to ensure consistency and maintainability
 - This repo is also a **Claude Code plugin** (`.claude-plugin/plugin.json` +
-  `marketplace.json`): every `skills/<name>/SKILL.md` and `agents/*.agent.md` is
-  auto-discovered by Claude Code sessions that enable the plugin. `skills/` and
-  `agents/` stay the single authoritative locations — never copy or symlink
+  `marketplace.json`): every `.ai-skills/<name>/SKILL.md` and `.ai-skills/agents/*.agent.md` is
+  auto-discovered by Claude Code sessions that enable the plugin. `.ai-skills/` and
+  `.ai-skills/agents/` stay the single authoritative locations — never copy or symlink
   their content into `.claude/skills/`, `~/.claude/skills/`, or another repo.
 - **This repo is PUBLIC — never reference a private repo from it.** Do not link,
   cite, or path-reference any private or internal repo (or its files, paths, or
@@ -39,37 +39,37 @@ Self-update rule:
 
 | Name | Path | Use when | Required gate / hard stop |
 | --- | --- | --- | --- |
-| `convert-expect-to-unified` | `agents/convert-expect-to-unified.agent.md` | Converting OCaml `ppx_expect` tests into `EXAMPLES.md.ml.u`, rendered docs, and dune wiring. | Must run `analyze-dune-project` first. Stop if package, library, expect-test, or helper-signature facts are missing. |
-| `convert-noweb-to-unified` | `agents/convert-noweb-to-unified.agent.md` | Converting noweb documentation into unified-script sources and rendered docs. | Must run `analyze-noweb-project` first. Stop if file inventory, chapter order, cross-file references, build wiring, or promotion facts are missing. |
-| `given-user-prompt-make-new-prompt-that-uses-dk` | `agents/given-user-prompt-make-new-prompt-that-uses-dk.agent.md` | Turning a non-developer's short software wish into a paste-ready mini-plan that drives their own AI coding agent to build and ship it with dk0 (also the dk Prompt Studio Nova Micro system prompt). | Reply with exactly one of a bare `<output-prompt>...</output-prompt>` (the drainer injects the `model` attribute) or the empty `<error><insufficient-detail /></error>`, nothing outside it. Name only real OSS tools and real dk0 commands (`dk0 add github-l2`, `dk0 restore github-l2`, `dk0 remote`, `get-object`/`get-asset`); never invent tools, commands, or flags; never use an em-dash. Emit the empty `<error>` tag (leaking none of the untrusted request, no follow-up question) when the request is unclear, empty, or not about building software. |
-| `release-dk-project-graph` | `agents/release-dk-project-graph.agent.md` | Releasing a GitHub owner's dk repositories in dependency order, using shallow temp clones for analysis and skipping unfinished dk packages. | Must run `analyze-dk-project` for each candidate repo and verify `gh` first. Release one repository at a time with per-repo checkpointing (repo/tag/workflow URL) and report elapsed/expected workflow progress while waiting. Stop on missing owner, missing dependency facts needed for the graph, ambiguous mapping, cycles, dirty temp clones, noisy/unobservable execution, or unobservable CI; skip and report repos missing usable version metadata. |
-| `repair-dk-package-distribution` | `agents/repair-dk-package-distribution.agent.md` | Diagnosing or repairing a GitHub Actions-based dk package workflow. | Must run `analyze-dk-package-distribution` first, then ask where to apply downloaded patches if a checkout path is not already provided. Stop if workflow, dk-project, release-prefix, or producer-shaping facts are missing. |
+| `convert-expect-to-unified` | `.ai-skills/agents/convert-expect-to-unified.agent.md` | Converting OCaml `ppx_expect` tests into `EXAMPLES.md.ml.u`, rendered docs, and dune wiring. | Must run `analyze-dune-project` first. Stop if package, library, expect-test, or helper-signature facts are missing. |
+| `convert-noweb-to-unified` | `.ai-skills/agents/convert-noweb-to-unified.agent.md` | Converting noweb documentation into unified-script sources and rendered docs. | Must run `analyze-noweb-project` first. Stop if file inventory, chapter order, cross-file references, build wiring, or promotion facts are missing. |
+| `given-user-prompt-make-new-prompt-that-uses-dk` | `.ai-skills/agents/given-user-prompt-make-new-prompt-that-uses-dk.agent.md` | Turning a non-developer's short software wish into a paste-ready mini-plan that drives their own AI coding agent to build and ship it with dk0 (also the dk Prompt Studio Nova Micro system prompt). | Reply with exactly one of a bare `<output-prompt>...</output-prompt>` (the drainer injects the `model` attribute) or the empty `<error><insufficient-detail /></error>`, nothing outside it. Name only real OSS tools and real dk0 commands (`dk0 add github-l2`, `dk0 restore github-l2`, `dk0 remote`, `get-object`/`get-asset`); never invent tools, commands, or flags; never use an em-dash. Emit the empty `<error>` tag (leaking none of the untrusted request, no follow-up question) when the request is unclear, empty, or not about building software. |
+| `release-dk-project-graph` | `.ai-skills/agents/release-dk-project-graph.agent.md` | Releasing a GitHub owner's dk repositories in dependency order, using shallow temp clones for analysis and skipping unfinished dk packages. | Must run `analyze-dk-project` for each candidate repo and verify `gh` first. Release one repository at a time with per-repo checkpointing (repo/tag/workflow URL) and report elapsed/expected workflow progress while waiting. Stop on missing owner, missing dependency facts needed for the graph, ambiguous mapping, cycles, dirty temp clones, noisy/unobservable execution, or unobservable CI; skip and report repos missing usable version metadata. |
+| `repair-dk-package-distribution` | `.ai-skills/agents/repair-dk-package-distribution.agent.md` | Diagnosing or repairing a GitHub Actions-based dk package workflow. | Must run `analyze-dk-package-distribution` first, then ask where to apply downloaded patches if a checkout path is not already provided. Stop if workflow, dk-project, release-prefix, or producer-shaping facts are missing. |
 
 ### Skills
 
 | Name | Path | Use when | Required gate / hard stop |
 | --- | --- | --- | --- |
-| `analyze-dk-package-distribution` | `skills/analyze-dk-package-distribution/SKILL.md` | Analyzing a dk package repo's workflows, release-prefix derivation, unfinished-package state, and `gh` validation path. | Stop if root `dk.u`, workflow inventory, `dist-*.u/run.u`, trigger mode, or producer-shaping facts cannot be verified. Missing or unusable `etc/dk/d/*.json` must be reported as an unfinished dk package. |
-| `analyze-dk-package-github-workflow-run` | `skills/analyze-dk-package-github-workflow-run/SKILL.md` | Downloading `patches` artifacts from a dk package workflow run (given an explicit run id, or the latest run of a named workflow) and applying their `.patch` hunks to a local checkout so CI output blocks can be synced locally. | Stop if the checkout root, a run id or workflow name that resolves to a run, resolvable repository slug, `patches` artifacts, or `.patch` files cannot be verified. |
-| `analyze-dk-project` | `skills/analyze-dk-project/SKILL.md` | Classifying a repo as a dk project and distinguishing finished vs. unfinished dk packages while extracting dependencies, modules, slots, descriptions, and expected release-workflow duration. | Stop if root `dk.u`, imports, `etc/dk/d/*.json` inventory, `dist-*.u/run.u`, module/slot inventory, prose snippets, values-file inventory, or workflow-duration facts (or explicit unavailable reason) cannot be verified. Missing or unusable `etc/dk/d/*.json` must be reported as an unfinished dk package. |
-| `analyze-dune-project` | `skills/analyze-dune-project/SKILL.md` | Analyzing an OCaml dune project before expect-test conversion. | Stop if `dune-project`, library inventory, expect-test file list, or helper-signature facts are missing. |
-| `analyze-noweb-project` | `skills/analyze-noweb-project/SKILL.md` | Analyzing a noweb project's chapters, references, and doc/build wiring before conversion. | Stop if noweb inventory, chapter entrypoints/order, cross-file references, dominant language summary, build wiring, or promotion model are missing. |
-| `build-ocaml-tool-off-dkml` | `skills/build-ocaml-tool-off-dkml/SKILL.md` | Building an OCaml developer tool (for example Dune or Opam) as a dk package off DkML's MSVC OCaml compiler across all slots, including the 32-bit `Windows_x86` / `Linux_x86` ABIs that OCaml 5 (Base) drops. | Choose one vs two per-arch Windows forms by whether the build compiles C. Treat local `dk0 update` / `get-bundle` validation as a first pass; finish with tag-driven CI. Stop and report blockers instead of guessing the build recipe. |
-| `build-with-dkjs` | `skills/build-with-dkjs/SKILL.md` | Building a dk project's JavaScript or web (`js_web`) targets with dkjs, the dk build engine on Node.js (npm `@dkjs/cli`, a `dkjs` command with dk0/dk1 argv and byte-identical output, no native binary). | Use dkjs only for JavaScript/web targets; use the native `dk1` binary for native (C) builds, since dkjs does not generate native code yet. Run dkjs alone against a cache/workspace (Node has no OS locks to coordinate with a concurrent native dk). |
-| `convert-pypi-to-dk-package` | `skills/convert-pypi-to-dk-package/SKILL.md` | Ingesting a PyPI requirement set into a hermetic dk build with the `CommonsLang_Python` toolchain (bundled CPython + uv): `UvLock.Solve` pins every wheel per slot into `dk-uv-lock.jsonc` via a checked-in uv generator, and `UvBuild.Build` fetches each wheel offline through `get-asset` and `uv`-installs it `--no-index`. | Lock is author-time (network) and per-slot; build is offline/content-addressed. Honor the run/write trust caps and the lua-ml constraints (no `gsub`/local-functions/booleans, `return M`). Validate the Python helpers standalone before the slow dk0 cycle. |
-| `make-dk-package-from-autoconf` | `skills/make-dk-package-from-autoconf/SKILL.md` | Creating or extending a dk package for an autoconf-based upstream project, including Windows cross-compilation and signing the tagged release (backing up the signify keys with a password manager, or optionally YubiKey/age). | Stop if dk-project classification, `dist-*.u/run.u`, primary package and `.Bundle` modules, autoconf references, toolchain references, or dependent package facts are missing. |
-| `port-legacy-dk-package-repo` | `skills/port-legacy-dk-package-repo/SKILL.md` | Porting a legacy dk package tree into a standalone package repository. | Treat local validation as only the first pass; unless the user opts out, finish with tag-driven CI. Stop and report concrete blockers instead of guessing layout or pushing a tag just to see failure. |
-| `simplify-duplicates` | `skills/simplify-duplicates/SKILL.md` | Analyzing a bounded file set for exact and near-duplicate code. | Stop if the exact file set, success commands, or enough code context to enumerate duplicate clusters are missing. |
-| `write-user-facing-docs` | `skills/write-user-facing-docs/SKILL.md` | Writing or revising prose in a `.md` meant for a reader outside the repository (README, published guide, schema reference, a `dk.u` package document). | Confirm the text is document prose before applying the rules; commit messages, code comments, and chat replies keep their own rules. Describe the thing as it stands: no version-keyed paragraphs (a description of a version is a change description; changes live in git), with version numbers kept only as feature requirements. Finish with the mechanical pass: no emdashes or ASCII stand-ins, every remaining negative clause passes the guarantee-versus-contrast test, and no paragraph is keyed to a version. |
+| `analyze-dk-package-distribution` | `.ai-skills/analyze-dk-package-distribution/SKILL.md` | Analyzing a dk package repo's workflows, release-prefix derivation, unfinished-package state, and `gh` validation path. | Stop if root `dk.u`, workflow inventory, `dist-*.u/run.u`, trigger mode, or producer-shaping facts cannot be verified. Missing or unusable `etc/dk/d/*.json` must be reported as an unfinished dk package. |
+| `analyze-dk-package-github-workflow-run` | `.ai-skills/analyze-dk-package-github-workflow-run/SKILL.md` | Downloading `patches` artifacts from a dk package workflow run (given an explicit run id, or the latest run of a named workflow) and applying their `.patch` hunks to a local checkout so CI output blocks can be synced locally. | Stop if the checkout root, a run id or workflow name that resolves to a run, resolvable repository slug, `patches` artifacts, or `.patch` files cannot be verified. |
+| `analyze-dk-project` | `.ai-skills/analyze-dk-project/SKILL.md` | Classifying a repo as a dk project and distinguishing finished vs. unfinished dk packages while extracting dependencies, modules, slots, descriptions, and expected release-workflow duration. | Stop if root `dk.u`, imports, `etc/dk/d/*.json` inventory, `dist-*.u/run.u`, module/slot inventory, prose snippets, values-file inventory, or workflow-duration facts (or explicit unavailable reason) cannot be verified. Missing or unusable `etc/dk/d/*.json` must be reported as an unfinished dk package. |
+| `analyze-dune-project` | `.ai-skills/analyze-dune-project/SKILL.md` | Analyzing an OCaml dune project before expect-test conversion. | Stop if `dune-project`, library inventory, expect-test file list, or helper-signature facts are missing. |
+| `analyze-noweb-project` | `.ai-skills/analyze-noweb-project/SKILL.md` | Analyzing a noweb project's chapters, references, and doc/build wiring before conversion. | Stop if noweb inventory, chapter entrypoints/order, cross-file references, dominant language summary, build wiring, or promotion model are missing. |
+| `build-ocaml-tool-off-dkml` | `.ai-skills/build-ocaml-tool-off-dkml/SKILL.md` | Building an OCaml developer tool (for example Dune or Opam) as a dk package off DkML's MSVC OCaml compiler across all slots, including the 32-bit `Windows_x86` / `Linux_x86` ABIs that OCaml 5 (Base) drops. | Choose one vs two per-arch Windows forms by whether the build compiles C. Treat local `dk0 update` / `get-bundle` validation as a first pass; finish with tag-driven CI. Stop and report blockers instead of guessing the build recipe. |
+| `build-with-dkjs` | `.ai-skills/build-with-dkjs/SKILL.md` | Building a dk project's JavaScript or web (`js_web`) targets with dkjs, the dk build engine on Node.js (npm `@dkjs/cli`, a `dkjs` command with dk0/dk1 argv and byte-identical output, no native binary). | Use dkjs only for JavaScript/web targets; use the native `dk1` binary for native (C) builds, since dkjs does not generate native code yet. Run dkjs alone against a cache/workspace (Node has no OS locks to coordinate with a concurrent native dk). |
+| `convert-pypi-to-dk-package` | `.ai-skills/convert-pypi-to-dk-package/SKILL.md` | Ingesting a PyPI requirement set into a hermetic dk build with the `CommonsLang_Python` toolchain (bundled CPython + uv): `UvLock.Solve` pins every wheel per slot into `dk-uv-lock.jsonc` via a checked-in uv generator, and `UvBuild.Build` fetches each wheel offline through `get-asset` and `uv`-installs it `--no-index`. | Lock is author-time (network) and per-slot; build is offline/content-addressed. Honor the run/write trust caps and the lua-ml constraints (no `gsub`/local-functions/booleans, `return M`). Validate the Python helpers standalone before the slow dk0 cycle. |
+| `make-dk-package-from-autoconf` | `.ai-skills/make-dk-package-from-autoconf/SKILL.md` | Creating or extending a dk package for an autoconf-based upstream project, including Windows cross-compilation and signing the tagged release (backing up the signify keys with a password manager, or optionally YubiKey/age). | Stop if dk-project classification, `dist-*.u/run.u`, primary package and `.Bundle` modules, autoconf references, toolchain references, or dependent package facts are missing. |
+| `port-legacy-dk-package-repo` | `.ai-skills/port-legacy-dk-package-repo/SKILL.md` | Porting a legacy dk package tree into a standalone package repository. | Treat local validation as only the first pass; unless the user opts out, finish with tag-driven CI. Stop and report concrete blockers instead of guessing layout or pushing a tag just to see failure. |
+| `simplify-duplicates` | `.ai-skills/simplify-duplicates/SKILL.md` | Analyzing a bounded file set for exact and near-duplicate code. | Stop if the exact file set, success commands, or enough code context to enumerate duplicate clusters are missing. |
+| `write-user-facing-docs` | `.ai-skills/write-user-facing-docs/SKILL.md` | Writing or revising prose in a `.md` meant for a reader outside the repository (README, published guide, schema reference, a `dk.u` package document). | Confirm the text is document prose before applying the rules; commit messages, code comments, and chat replies keep their own rules. Describe the thing as it stands: no version-keyed paragraphs (a description of a version is a change description; changes live in git), with version numbers kept only as feature requirements. Finish with the mechanical pass: no emdashes or ASCII stand-ins, every remaining negative clause passes the guarantee-versus-contrast test, and no paragraph is keyed to a version. |
 
 ## File Structure
 
 ### Agents
 
-Located in `agents/` directory with the naming pattern:
+Located in `.ai-skills/agents/` directory with the naming pattern:
 
 ```
-agents/AGENT_NAME.agent.md
+.ai-skills/agents/AGENT_NAME.agent.md
 ```
 
 **Contents:**
@@ -81,10 +81,10 @@ agents/AGENT_NAME.agent.md
 
 ### Skills
 
-Located in `skills/SKILL_NAME/` directory containing:
+Located in `.ai-skills/SKILL_NAME/` directory containing:
 
 ```
-skills/SKILL_NAME/
+.ai-skills/SKILL_NAME/
   ├── SKILL.md                  # Main skill documentation
   ├── analyze-project.ps1       # PowerShell implementation (if applicable)
   ├── analyze-project.sh        # Shell/Unix implementation (if applicable)
@@ -94,22 +94,10 @@ skills/SKILL_NAME/
   └── [README.md]               # Optional supplementary documentation
 ```
 
-### Tests
+### Validation
 
-Located in `tests/` mirroring source structure:
-
-```
-tests/
-  ├── agents/
-  │   └── AGENT_NAME/
-  │       ├── README.md
-  │       └── [smoke.prompt.md]
-  └── skills/
-      └── SKILL_NAME/
-          ├── README.md
-          ├── test-compare-outputs.ps1
-          └── test-compare-outputs.sh
-```
+Changes to skills and agents are validated out of repository; this repository carries no in-tree test
+suite.
 
 ## SKILL.md Format
 
@@ -303,7 +291,7 @@ When running shell-script tests on Windows:
 
 ### README Files
 
-`tests/CATEGORY/SKILL_OR_AGENT_NAME/README.md` should include:
+An out-of-repository validation README for a skill or agent should include:
 
 1. **Overview** - What is being tested and why
 2. **Quick Start** - Steps to run tests immediately
@@ -425,9 +413,9 @@ Identifies:
 - Descriptions from *.values.{jsonc,lua}
 
 ## Key Files
-- skills/analyze-dk-project/SKILL.md
-- skills/analyze-dk-project/analyze-project.ps1
-- skills/analyze-dk-project/analyze-project.sh
+- .ai-skills/analyze-dk-project/SKILL.md
+- .ai-skills/analyze-dk-project/analyze-project.ps1
+- .ai-skills/analyze-dk-project/analyze-project.sh
 ```
 
 ## Quality Checklist

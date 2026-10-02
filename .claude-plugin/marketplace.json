@@ -4,7 +4,7 @@
     "plugins": [
         {
             "name": "dk-ai",
-            "source": "./",
+            "source": "./.ai-skills",
             "description": "Reusable dk/dk0 skills and agents: analyze dk/dune/noweb projects, build OCaml tools off DkML, create/port dk packages, repair distributions, and convert tests/docs to unified scripts."
         }
     ]

@@ -1,5 +1,6 @@
 {
     "name": "dk-ai",
     "description": "Reusable dk/dk0 skills and agents: analyze dk/dune/noweb projects, build OCaml tools off DkML, create/port dk packages, repair distributions, and convert tests/docs to unified scripts.",
-    "author": { "name": "Diskuv" }
+    "author": { "name": "Diskuv" },
+    "skills": ["."]
 }
